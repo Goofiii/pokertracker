@@ -64,6 +64,7 @@ SCREENS
 display: none;
 flex-direction: column;
 flex: 1;
+min-height: 0;
 overflow: hidden;
 background: #0d0d14;
 min-width: 0;
@@ -73,6 +74,7 @@ width: 100%;
 
 .scroll-area {
 flex: 1;
+min-height: 0;
 overflow-y: auto;
 overflow-x: hidden;
 -webkit-overflow-scrolling: touch;
@@ -347,11 +349,12 @@ margin-bottom: 10px; min-width: 0;
 }
 .pr-name { font-size: 15px; font-weight: 600; color: #eeeef5; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
 .pr-preview { font-size: 13px; font-weight: 600; color: #44445a; flex-shrink: 0; margin-left: 8px; }
-.pr-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; min-width: 0; }
-.pr-inputs > div { min-width: 0; }
+.pr-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; min-width: 0; box-sizing: border-box; }
+.pr-inputs > div { min-width: 0; overflow: hidden; }
 .mini-label { display: block; font-size: 10px; font-weight: 600; color: #44445a; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; }
 .mini-input {
-width: 100%; display: block; min-width: 0;
+width: 100%; max-width: 100%; display: block; min-width: 0;
+box-sizing: border-box;
 background: #0d0d14; border: 1px solid #2a2a3e;
 border-radius: 9px; padding: 10px 12px;
 font-size: 16px; color: #eeeef5; outline: none;
