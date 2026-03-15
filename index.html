@@ -28,11 +28,9 @@ color: #eeeef5;
 font-family: -apple-system, BlinkMacSystemFont, ‘Helvetica Neue’, Helvetica, Arial, sans-serif;
 font-size: 16px;
 -webkit-font-smoothing: antialiased;
-height: 100%;
 overflow: hidden;
-position: fixed;
 width: 100%;
-top: 0; left: 0;
+height: 100%;
 }
 
 /* ────────────────────────────
@@ -44,10 +42,12 @@ Safe areas driven by JS below.
 #app {
 position: fixed;
 top: 0; left: 0; right: 0; bottom: 0;
+width: 100%;
+max-width: 100%;
 display: flex;
 flex-direction: column;
 background: #0d0d14;
-/* push content below notch/dynamic-island */
+overflow: hidden;
 }
 
 #status-bar-spacer {
@@ -79,6 +79,8 @@ overflow-x: hidden;
 overscroll-behavior: none;
 /* bottom padding = nav bar (58px) + home indicator */
 padding: 16px 16px calc(58px + env(safe-area-inset-bottom) + 12px);
+padding-left: max(16px, env(safe-area-inset-left));
+padding-right: max(16px, env(safe-area-inset-right));
 width: 100%;
 min-width: 0;
 }
@@ -91,10 +93,11 @@ flex-shrink: 0;
 display: flex;
 align-items: center;
 justify-content: space-between;
-padding: 0 16px;
-height: 52px;
+padding: 12px 16px;
 background: #0d0d14;
 border-bottom: 1px solid #1e1e2e;
+width: 100%;
+box-sizing: border-box;
 }
 .topbar h1 {
 font-size: 20px;
@@ -165,12 +168,14 @@ box-shadow: 0 0 0 4px #0a0a11, 0 4px 20px rgba(124,111,255,0.6);
 /* ────────────────────────────
 STAT CARDS
 ──────────────────────────── */
-.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; width: 100%; box-sizing: border-box; }
 .stat-box {
 background: #13131e;
 border: 1px solid #1e1e2e;
 border-radius: 12px;
 padding: 14px 12px;
+min-width: 0;
+overflow: hidden;
 }
 .stat-lbl { font-size: 10px; font-weight: 600; color: #44445a; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 6px; }
 .stat-val { font-size: 21px; font-weight: 700; letter-spacing: -0.5px; color: #eeeef5; }
