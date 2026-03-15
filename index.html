@@ -77,12 +77,12 @@ overflow-y: auto;
 overflow-x: hidden;
 -webkit-overflow-scrolling: touch;
 overscroll-behavior: none;
-/* bottom padding = nav bar (58px) + home indicator */
-padding: 16px 16px calc(58px + env(safe-area-inset-bottom) + 12px);
-padding-left: max(16px, env(safe-area-inset-left));
-padding-right: max(16px, env(safe-area-inset-right));
+padding-top: 16px;
+padding-left: 16px;
+padding-right: 16px;
+padding-bottom: calc(58px + env(safe-area-inset-bottom, 0px) + 16px);
 width: 100%;
-min-width: 0;
+box-sizing: border-box;
 }
 
 /* ────────────────────────────
@@ -127,7 +127,7 @@ display: flex;
 align-items: flex-start;
 z-index: 100;
 /* total height = buttons (58px) + home indicator gap */
-padding-bottom: env(safe-area-inset-bottom);
+padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 .nav-btn {
 flex: 1;
@@ -420,7 +420,7 @@ border-radius: 20px 20px 0 0;
 border-top: 1px solid #2a2a3e;
 width: 100%; max-height: 88vh;
 display: flex; flex-direction: column;
-padding-bottom: env(safe-area-inset-bottom);
+padding-bottom: env(safe-area-inset-bottom, 0px);
 animation: sheetup 0.26s cubic-bezier(0.32,0.72,0,1);
 }
 @keyframes sheetup { from { transform: translateY(100%); } to { transform: translateY(0); } }
@@ -453,7 +453,7 @@ TOAST
 ──────────────────────────── */
 #toast {
 position: fixed;
-bottom: calc(58px + env(safe-area-inset-bottom) + 12px);
+bottom: calc(58px + env(safe-area-inset-bottom, 0px) + 12px);
 left: 50%; transform: translateX(-50%);
 background: #23233a; border: 1px solid #2a2a3e;
 color: #eeeef5; padding: 11px 22px;
