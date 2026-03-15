@@ -1,22 +1,1646 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
-  <title>Poker Tracker</title>
-  <meta name="theme-color" content="#0a0a0f"/>
-  <meta name="apple-mobile-web-app-capable" content="yes"/>
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-  <meta name="apple-mobile-web-app-title" content="Poker"/>
-  <style>
-    *{-webkit-tap-highlight-color:transparent;box-sizing:border-box}
-    html,body,#root{height:100%;margin:0;background:#0a0a0f;overflow:hidden}
-    input,textarea{font-size:16px!important;-webkit-appearance:none}
-    ::-webkit-scrollbar{display:none}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Poker Tracker">
+<meta name="theme-color" content="#0a0a0f">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Poker Tracker</title>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --bg2: #12121a;
+    --bg3: #1a1a26;
+    --bg4: #22222e;
+    --border: #2a2a3a;
+    --border2: #3a3a50;
+    --text: #f0f0f8;
+    --text2: #9090b0;
+    --text3: #5a5a78;
+    --green: #00e676;
+    --green-dim: #00c853;
+    --green-bg: rgba(0,230,118,0.1);
+    --red: #ff5252;
+    --red-dim: #d50000;
+    --red-bg: rgba(255,82,82,0.1);
+    --gold: #ffd700;
+    --gold-bg: rgba(255,215,0,0.1);
+    --accent: #7c6fff;
+    --accent-bg: rgba(124,111,255,0.12);
+    --nav-h: 82px;
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-top: env(safe-area-inset-top, 0px);
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+- { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+width: 100%; height: 100%;
+background: var(–bg);
+color: var(–text);
+font-family: -apple-system, ‘SF Pro Display’, ‘SF Pro Text’, Helvetica, sans-serif;
+font-size: 16px;
+-webkit-font-smoothing: antialiased;
+overflow: hidden;
+}
+
+#app {
+width: 100%;
+height: 100%;
+display: flex;
+flex-direction: column;
+position: relative;
+}
+
+/* ── Screens ── */
+.screen {
+display: none;
+flex-direction: column;
+flex: 1;
+overflow: hidden;
+padding-top: var(–safe-top);
+}
+.screen.active { display: flex; }
+
+.scroll-area {
+flex: 1;
+overflow-y: auto;
+-webkit-overflow-scrolling: touch;
+padding: 16px 16px calc(var(–nav-h) + var(–safe-bottom) + 16px);
+}
+
+/* ── Top bar ── */
+.topbar {
+display: flex;
+align-items: center;
+justify-content: space-between;
+padding: 14px 16px 10px;
+background: var(–bg);
+border-bottom: 1px solid var(–border);
+min-height: 56px;
+flex-shrink: 0;
+}
+.topbar h1 {
+font-size: 22px;
+font-weight: 700;
+letter-spacing: -0.5px;
+}
+.topbar .topbar-sub { font-size: 13px; color: var(–text3); }
+
+/* ── Bottom nav ── */
+#nav {
+position: fixed;
+bottom: 0; left: 0; right: 0;
+height: calc(var(–nav-h) + var(–safe-bottom));
+padding-bottom: var(–safe-bottom);
+background: rgba(10,10,15,0.92);
+backdrop-filter: blur(20px);
+-webkit-backdrop-filter: blur(20px);
+border-top: 1px solid var(–border);
+display: flex;
+align-items: flex-start;
+z-index: 100;
+}
+.nav-btn {
+flex: 1;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+padding: 10px 0 0;
+gap: 4px;
+background: none;
+border: none;
+color: var(–text3);
+font-size: 10px;
+font-weight: 500;
+letter-spacing: 0.3px;
+cursor: pointer;
+transition: color 0.2s;
+min-height: 56px;
+}
+.nav-btn.active { color: var(–accent); }
+.nav-btn svg { width: 24px; height: 24px; }
+.nav-btn.center-btn {
+position: relative;
+color: var(–bg);
+}
+.nav-btn.center-btn .nav-icon-wrap {
+width: 50px; height: 50px;
+background: linear-gradient(135deg, var(–accent), #a78fff);
+border-radius: 50%;
+display: flex; align-items: center; justify-content: center;
+margin-top: -18px;
+box-shadow: 0 4px 20px rgba(124,111,255,0.5);
+}
+.nav-btn.center-btn .nav-icon-wrap svg { color: #fff; width: 26px; height: 26px; }
+.nav-label { pointer-events: none; }
+
+/* ── Cards ── */
+.card {
+background: var(–bg2);
+border: 1px solid var(–border);
+border-radius: var(–radius);
+padding: 16px;
+margin-bottom: 12px;
+}
+.card-sm {
+background: var(–bg2);
+border: 1px solid var(–border);
+border-radius: var(–radius-sm);
+padding: 12px 14px;
+margin-bottom: 8px;
+}
+
+/* ── Stat grid ── */
+.stat-grid {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 10px;
+margin-bottom: 12px;
+}
+.stat-box {
+background: var(–bg2);
+border: 1px solid var(–border);
+border-radius: var(–radius-sm);
+padding: 14px 12px;
+display: flex;
+flex-direction: column;
+gap: 4px;
+}
+.stat-label { font-size: 11px; color: var(–text3); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+.stat-value { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+.stat-value.green { color: var(–green); }
+.stat-value.red { color: var(–red); }
+.stat-value.gold { color: var(–gold); }
+.stat-value.accent { color: var(–accent); }
+
+/* ── Buttons ── */
+.btn {
+display: inline-flex;
+align-items: center;
+justify-content: center;
+gap: 6px;
+padding: 13px 20px;
+border-radius: var(–radius-sm);
+border: none;
+font-size: 15px;
+font-weight: 600;
+cursor: pointer;
+transition: opacity 0.15s, transform 0.1s;
+-webkit-user-select: none;
+user-select: none;
+}
+.btn:active { opacity: 0.75; transform: scale(0.97); }
+.btn-primary { background: linear-gradient(135deg, var(–accent), #a78fff); color: #fff; width: 100%; }
+.btn-secondary { background: var(–bg3); color: var(–text); border: 1px solid var(–border2); }
+.btn-danger { background: var(–red-bg); color: var(–red); border: 1px solid rgba(255,82,82,0.3); }
+.btn-ghost { background: transparent; color: var(–text2); }
+.btn-sm { padding: 8px 14px; font-size: 13px; border-radius: 8px; }
+.btn-icon { padding: 10px; border-radius: 10px; background: var(–bg3); border: 1px solid var(–border); color: var(–text2); }
+
+/* ── Forms ── */
+.field { margin-bottom: 14px; }
+.field label {
+display: block;
+font-size: 12px;
+font-weight: 600;
+color: var(–text3);
+text-transform: uppercase;
+letter-spacing: 0.5px;
+margin-bottom: 6px;
+}
+.field input, .field textarea {
+width: 100%;
+background: var(–bg3);
+border: 1px solid var(–border);
+border-radius: var(–radius-sm);
+padding: 13px 14px;
+color: var(–text);
+font-size: 16px;
+outline: none;
+transition: border-color 0.2s;
+-webkit-appearance: none;
+appearance: none;
+}
+.field input:focus, .field textarea:focus { border-color: var(–accent); }
+.field textarea { resize: none; font-family: inherit; min-height: 70px; }
+.field input[type=“number”] { -moz-appearance: textfield; }
+.field input[type=“number”]::-webkit-inner-spin-button,
+.field input[type=“number”]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+/* ── Lists ── */
+.list-item {
+display: flex;
+align-items: center;
+gap: 12px;
+padding: 14px 16px;
+background: var(–bg2);
+border: 1px solid var(–border);
+border-radius: var(–radius-sm);
+margin-bottom: 8px;
+cursor: pointer;
+transition: background 0.15s;
+}
+.list-item:active { background: var(–bg3); }
+.list-item-avatar {
+width: 40px; height: 40px;
+border-radius: 50%;
+background: var(–accent-bg);
+border: 1px solid rgba(124,111,255,0.3);
+display: flex; align-items: center; justify-content: center;
+font-size: 16px; font-weight: 700; color: var(–accent);
+flex-shrink: 0;
+}
+.list-item-body { flex: 1; min-width: 0; }
+.list-item-name { font-size: 16px; font-weight: 600; }
+.list-item-sub { font-size: 13px; color: var(–text3); margin-top: 2px; }
+.list-item-end { text-align: right; flex-shrink: 0; }
+.list-item-value { font-size: 17px; font-weight: 700; }
+
+/* ── Badges ── */
+.badge {
+display: inline-flex;
+align-items: center;
+padding: 3px 9px;
+border-radius: 20px;
+font-size: 12px;
+font-weight: 600;
+}
+.badge-green { background: var(–green-bg); color: var(–green); }
+.badge-red { background: var(–red-bg); color: var(–red); }
+.badge-gold { background: var(–gold-bg); color: var(–gold); }
+.badge-accent { background: var(–accent-bg); color: var(–accent); }
+
+/* ── Table ── */
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th {
+text-align: left;
+padding: 8px 10px;
+font-size: 11px;
+font-weight: 600;
+color: var(–text3);
+text-transform: uppercase;
+letter-spacing: 0.4px;
+border-bottom: 1px solid var(–border);
+}
+td { padding: 11px 10px; border-bottom: 1px solid var(–border); }
+tr:last-child td { border-bottom: none; }
+tr.winner td { background: rgba(0,230,118,0.04); }
+tr.loser td { background: rgba(255,82,82,0.04); }
+.col-profit { font-weight: 700; }
+.col-profit.green { color: var(–green); }
+.col-profit.red { color: var(–red); }
+
+/* ── Divider ── */
+.divider { height: 1px; background: var(–border); margin: 16px 0; }
+.section-title {
+font-size: 13px;
+font-weight: 600;
+color: var(–text3);
+text-transform: uppercase;
+letter-spacing: 0.5px;
+margin-bottom: 10px;
+}
+
+/* ── Modal ── */
+.modal-backdrop {
+display: none;
+position: fixed;
+inset: 0;
+background: rgba(0,0,0,0.7);
+z-index: 200;
+align-items: flex-end;
+padding-bottom: var(–safe-bottom);
+}
+.modal-backdrop.open { display: flex; }
+.modal {
+background: var(–bg2);
+border-radius: 20px 20px 0 0;
+border-top: 1px solid var(–border2);
+width: 100%;
+max-height: 92vh;
+display: flex;
+flex-direction: column;
+animation: slideUp 0.3s cubic-bezier(0.32,0.72,0,1);
+}
+@keyframes slideUp {
+from { transform: translateY(100%); }
+to { transform: translateY(0); }
+}
+.modal-handle {
+width: 36px; height: 5px;
+background: var(–border2);
+border-radius: 3px;
+margin: 12px auto 0;
+flex-shrink: 0;
+}
+.modal-header {
+display: flex;
+align-items: center;
+justify-content: space-between;
+padding: 16px 20px 12px;
+flex-shrink: 0;
+}
+.modal-title { font-size: 18px; font-weight: 700; }
+.modal-body {
+padding: 0 20px 24px;
+overflow-y: auto;
+-webkit-overflow-scrolling: touch;
+flex: 1;
+}
+
+/* ── Toast ── */
+#toast {
+position: fixed;
+bottom: calc(var(–nav-h) + var(–safe-bottom) + 12px);
+left: 50%; transform: translateX(-50%);
+background: var(–bg4);
+border: 1px solid var(–border2);
+color: var(–text);
+padding: 12px 20px;
+border-radius: 30px;
+font-size: 14px;
+font-weight: 500;
+z-index: 300;
+white-space: nowrap;
+opacity: 0;
+transition: opacity 0.3s;
+pointer-events: none;
+}
+#toast.show { opacity: 1; }
+
+/* ── Empty state ── */
+.empty {
+text-align: center;
+padding: 60px 20px;
+color: var(–text3);
+}
+.empty-icon { font-size: 48px; margin-bottom: 12px; }
+.empty-title { font-size: 18px; font-weight: 600; color: var(–text2); margin-bottom: 6px; }
+.empty-sub { font-size: 14px; }
+
+/* ── Canvas charts ── */
+canvas { display: block; }
+
+/* ── Session player row (Add Session screen) ── */
+.session-player-row {
+background: var(–bg3);
+border: 1px solid var(–border);
+border-radius: var(–radius-sm);
+padding: 12px;
+margin-bottom: 8px;
+}
+.session-player-row .row-name {
+font-size: 15px; font-weight: 600; margin-bottom: 8px;
+display: flex; align-items: center; justify-content: space-between;
+}
+.session-player-row .row-inputs {
+display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+}
+.session-player-row .mini-field label {
+font-size: 11px; color: var(–text3); font-weight: 600;
+text-transform: uppercase; letter-spacing: 0.4px; display: block; margin-bottom: 4px;
+}
+.session-player-row .mini-field input {
+width: 100%; background: var(–bg2); border: 1px solid var(–border);
+border-radius: 8px; padding: 10px 12px; color: var(–text);
+font-size: 16px; outline: none; -webkit-appearance: none;
+-moz-appearance: textfield;
+}
+.session-player-row .mini-field input:focus { border-color: var(–accent); }
+.session-player-row .mini-field input::-webkit-inner-spin-button,
+.session-player-row .mini-field input::-webkit-outer-spin-button { -webkit-appearance: none; }
+.session-player-row .profit-preview {
+margin-top: 8px; text-align: right; font-size: 13px; font-weight: 600;
+}
+
+/* ── Player select toggles ── */
+.player-toggle-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.player-toggle {
+padding: 8px 14px; border-radius: 20px; border: 1px solid var(–border2);
+background: var(–bg3); color: var(–text2); font-size: 14px; font-weight: 500;
+cursor: pointer; transition: all 0.15s;
+}
+.player-toggle.selected {
+background: var(–accent-bg); border-color: var(–accent); color: var(–accent);
+}
+
+/* ── Warning banner ── */
+.warning-box {
+background: rgba(255,215,0,0.08);
+border: 1px solid rgba(255,215,0,0.3);
+border-radius: var(–radius-sm);
+padding: 12px 14px;
+font-size: 13px;
+color: var(–gold);
+margin-bottom: 14px;
+display: none;
+}
+.warning-box.show { display: block; }
+
+/* ── Rank number ── */
+.rank-num {
+width: 28px; height: 28px;
+border-radius: 50%;
+display: flex; align-items: center; justify-content: center;
+font-size: 13px; font-weight: 700;
+flex-shrink: 0;
+}
+.rank-1 { background: var(–gold-bg); color: var(–gold); }
+.rank-2 { background: rgba(192,192,192,0.1); color: #c0c0c0; }
+.rank-3 { background: rgba(205,127,50,0.1); color: #cd7f32; }
+.rank-n { background: var(–bg4); color: var(–text3); }
+
+/* ── Leaderboard tabs ── */
+.lb-tabs {
+display: flex; gap: 0;
+background: var(–bg3);
+border-radius: var(–radius-sm);
+padding: 3px;
+margin-bottom: 16px;
+}
+.lb-tab {
+flex: 1; padding: 8px; border-radius: 7px;
+background: none; border: none; color: var(–text3);
+font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+text-align: center;
+}
+.lb-tab.active { background: var(–bg); color: var(–text); }
+
+/* ── Back button ── */
+.back-btn {
+display: flex; align-items: center; gap: 4px;
+background: none; border: none; color: var(–accent);
+font-size: 16px; font-weight: 500; cursor: pointer; padding: 0;
+}
+
+/* Action row */
+.action-row { display: flex; gap: 8px; margin-top: 8px; }
+.action-row .btn { flex: 1; }
+
+/* Validation indicator */
+.balance-bar {
+background: var(–bg3);
+border: 1px solid var(–border);
+border-radius: var(–radius-sm);
+padding: 12px 14px;
+margin-bottom: 14px;
+display: flex;
+align-items: center;
+justify-content: space-between;
+font-size: 13px;
+}
+.balance-bar .bal-label { color: var(–text3); font-weight: 500; }
+.balance-bar .bal-val { font-weight: 700; }
+
+/* Detail view */
+#screen-detail .scroll-area { padding-top: 8px; }
+
+/* Confirm dialog */
+.confirm-overlay {
+display: none;
+position: fixed; inset: 0;
+background: rgba(0,0,0,0.75);
+z-index: 400;
+align-items: center;
+justify-content: center;
+padding: 24px;
+}
+.confirm-overlay.open { display: flex; }
+.confirm-box {
+background: var(–bg2);
+border: 1px solid var(–border2);
+border-radius: 20px;
+padding: 24px;
+width: 100%;
+max-width: 320px;
+text-align: center;
+}
+.confirm-box h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+.confirm-box p { font-size: 14px; color: var(–text2); margin-bottom: 20px; }
+.confirm-actions { display: flex; gap: 10px; }
+.confirm-actions .btn { flex: 1; }
+</style>
+
 </head>
 <body>
-  <div id="root"></div>
-  <script type="module" src="/src/App.jsx"></script>
+<div id="app">
+
+  <!-- ══════════ SCREEN: DASHBOARD ══════════ -->
+
+  <div class="screen active" id="screen-dashboard">
+    <div class="topbar">
+      <div>
+        <h1>♠ Poker Tracker</h1>
+        <div class="topbar-sub" id="db-subtitle">Loading…</div>
+      </div>
+    </div>
+    <div class="scroll-area">
+      <div class="stat-grid" id="db-stats"></div>
+      <div class="section-title">Recent Sessions</div>
+      <div id="db-recent"></div>
+      <div class="section-title" style="margin-top:16px">Top Players</div>
+      <div id="db-top-players"></div>
+    </div>
+  </div>
+
+  <!-- ══════════ SCREEN: PLAYERS ══════════ -->
+
+  <div class="screen" id="screen-players">
+    <div class="topbar">
+      <h1>Players</h1>
+      <button class="btn btn-sm btn-primary" style="width:auto" onclick="openAddPlayerModal()">+ Add</button>
+    </div>
+    <div class="scroll-area">
+      <div id="players-list"></div>
+    </div>
+  </div>
+
+  <!-- ══════════ SCREEN: ADD SESSION ══════════ -->
+
+  <div class="screen" id="screen-add-session">
+    <div class="topbar">
+      <h1 id="add-session-title">New Session</h1>
+    </div>
+    <div class="scroll-area" id="add-session-scroll">
+      <div class="field">
+        <label>Session Name</label>
+        <input type="text" id="sess-name" placeholder="e.g. Game Night #12">
+      </div>
+      <div class="field">
+        <label>Notes (optional)</label>
+        <textarea id="sess-notes" placeholder="Any notes…"></textarea>
+      </div>
+      <div class="section-title">Select Players</div>
+      <div class="player-toggle-grid" id="player-toggles"></div>
+      <div class="section-title">Results</div>
+      <div id="session-player-rows"></div>
+      <div class="balance-bar" id="balance-bar">
+        <span class="bal-label">Balance Check</span>
+        <span class="bal-val" id="balance-val">—</span>
+      </div>
+      <div class="warning-box" id="balance-warning">
+        ⚠️ Buy-ins and cash-outs don't balance. Double-check before saving.
+      </div>
+      <button class="btn btn-primary" onclick="saveSession()" id="save-session-btn">Save Session</button>
+      <div style="height:8px"></div>
+      <button class="btn btn-ghost" onclick="cancelSessionEdit()" id="cancel-session-btn" style="display:none;width:100%">Cancel</button>
+      <input type="hidden" id="editing-session-id">
+    </div>
+  </div>
+
+  <!-- ══════════ SCREEN: SESSIONS ══════════ -->
+
+  <div class="screen" id="screen-sessions">
+    <div class="topbar">
+      <h1>Sessions</h1>
+      <div class="topbar-sub" id="sessions-count"></div>
+    </div>
+    <div class="scroll-area">
+      <div id="sessions-list"></div>
+    </div>
+  </div>
+
+  <!-- ══════════ SCREEN: LEADERBOARD ══════════ -->
+
+  <div class="screen" id="screen-leaderboard">
+    <div class="topbar">
+      <h1>Leaderboard</h1>
+    </div>
+    <div class="scroll-area">
+      <div class="lb-tabs" id="lb-tabs">
+        <button class="lb-tab active" onclick="switchLbTab('profit',this)">Profit</button>
+        <button class="lb-tab" onclick="switchLbTab('avg',this)">Average</button>
+        <button class="lb-tab" onclick="switchLbTab('winrate',this)">Win Rate</button>
+      </div>
+      <div id="leaderboard-list"></div>
+    </div>
+  </div>
+
+  <!-- ══════════ SCREEN: SESSION DETAIL ══════════ -->
+
+  <div class="screen" id="screen-detail">
+    <div class="topbar">
+      <button class="back-btn" onclick="goBack()">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        Back
+      </button>
+      <div style="display:flex;gap:8px">
+        <button class="btn-icon btn" onclick="editCurrentSession()">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="btn-icon btn" style="color:var(--red)" onclick="deleteCurrentSession()">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="scroll-area" id="detail-content"></div>
+  </div>
+
+  <!-- ══════════ SCREEN: PLAYER DETAIL ══════════ -->
+
+  <div class="screen" id="screen-player-detail">
+    <div class="topbar">
+      <button class="back-btn" onclick="goBack()">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        Back
+      </button>
+      <div style="display:flex;gap:8px">
+        <button class="btn-icon btn" onclick="editCurrentPlayer()">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="btn-icon btn" style="color:var(--red)" onclick="deleteCurrentPlayer()">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="scroll-area" id="player-detail-content"></div>
+  </div>
+
+  <!-- ══════════ BOTTOM NAV ══════════ -->
+
+  <nav id="nav">
+    <button class="nav-btn active" id="nav-dashboard" onclick="showScreen('dashboard')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span class="nav-label">Dashboard</span>
+    </button>
+    <button class="nav-btn" id="nav-players" onclick="showScreen('players')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+      <span class="nav-label">Players</span>
+    </button>
+    <button class="nav-btn center-btn" id="nav-add-session" onclick="showScreen('add-session')">
+      <div class="nav-icon-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </div>
+      <span class="nav-label" style="color:var(--text3);margin-top:2px">Session</span>
+    </button>
+    <button class="nav-btn" id="nav-sessions" onclick="showScreen('sessions')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      <span class="nav-label">Sessions</span>
+    </button>
+    <button class="nav-btn" id="nav-leaderboard" onclick="showScreen('leaderboard')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+      <span class="nav-label">Leaderboard</span>
+    </button>
+  </nav>
+
+  <!-- ══════════ MODAL: ADD/EDIT PLAYER ══════════ -->
+
+  <div class="modal-backdrop" id="player-modal">
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <span class="modal-title" id="player-modal-title">Add Player</span>
+        <button class="btn btn-ghost btn-sm" onclick="closePlayerModal()">Cancel</button>
+      </div>
+      <div class="modal-body">
+        <div class="field">
+          <label>Name *</label>
+          <input type="text" id="player-name" placeholder="Full name">
+        </div>
+        <div class="field">
+          <label>Nickname (optional)</label>
+          <input type="text" id="player-nickname" placeholder="e.g. The Fish">
+        </div>
+        <div class="field">
+          <label>Notes (optional)</label>
+          <textarea id="player-notes" placeholder="Any notes…"></textarea>
+        </div>
+        <input type="hidden" id="player-edit-id">
+        <button class="btn btn-primary" onclick="savePlayer()">Save Player</button>
+        <div style="height:12px"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ CONFIRM DIALOG ══════════ -->
+
+  <div class="confirm-overlay" id="confirm-overlay">
+    <div class="confirm-box">
+      <h3 id="confirm-title">Delete?</h3>
+      <p id="confirm-msg">This cannot be undone.</p>
+      <div class="confirm-actions">
+        <button class="btn btn-secondary" onclick="confirmNo()">Cancel</button>
+        <button class="btn btn-danger" onclick="confirmYes()">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ TOAST ══════════ -->
+
+  <div id="toast"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  DATA LAYER
+// ═══════════════════════════════════════════════
+const DB = {
+  _players: null,
+  _sessions: null,
+
+  players() {
+    if (!this._players) {
+      try { this._players = JSON.parse(localStorage.getItem('pk_players') || '[]'); }
+      catch(e) { this._players = []; }
+    }
+    return this._players;
+  },
+
+  sessions() {
+    if (!this._sessions) {
+      try { this._sessions = JSON.parse(localStorage.getItem('pk_sessions') || '[]'); }
+      catch(e) { this._sessions = []; }
+    }
+    return this._sessions;
+  },
+
+  savePlayers() { localStorage.setItem('pk_players', JSON.stringify(this._players)); },
+  saveSessions() { localStorage.setItem('pk_sessions', JSON.stringify(this._sessions)); },
+
+  addPlayer(p) { this.players().push(p); this.savePlayers(); },
+  updatePlayer(id, data) {
+    const i = this.players().findIndex(p => p.id === id);
+    if (i >= 0) { Object.assign(this._players[i], data); this.savePlayers(); }
+  },
+  deletePlayer(id) {
+    this._players = this.players().filter(p => p.id !== id);
+    this.savePlayers();
+  },
+  getPlayer(id) { return this.players().find(p => p.id === id); },
+
+  addSession(s) { this.sessions().unshift(s); this.saveSessions(); },
+  updateSession(id, data) {
+    const i = this.sessions().findIndex(s => s.id === id);
+    if (i >= 0) { Object.assign(this._sessions[i], data); this.saveSessions(); }
+  },
+  deleteSession(id) {
+    this._sessions = this.sessions().filter(s => s.id !== id);
+    this.saveSessions();
+  },
+  getSession(id) { return this.sessions().find(s => s.id === id); },
+
+  playerStats(playerId) {
+    const sessions = this.sessions().filter(s => s.results.some(r => r.playerId === playerId));
+    let totalProfit = 0, biggestWin = null, biggestLoss = null;
+    let wins = 0;
+    sessions.forEach(s => {
+      const r = s.results.find(r => r.playerId === playerId);
+      if (!r) return;
+      const profit = r.cashout - r.buyin;
+      totalProfit += profit;
+      if (profit > 0) wins++;
+      if (biggestWin === null || profit > biggestWin) biggestWin = profit;
+      if (biggestLoss === null || profit < biggestLoss) biggestLoss = profit;
+    });
+    const count = sessions.length;
+    return {
+      count,
+      totalProfit,
+      avgProfit: count ? totalProfit / count : 0,
+      biggestWin: biggestWin || 0,
+      biggestLoss: biggestLoss || 0,
+      winRate: count ? (wins / count * 100) : 0,
+      sessions
+    };
+  }
+};
+
+// ═══════════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════════
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+function fmt(n) {
+  const abs = Math.abs(n);
+  const s = abs >= 1000 ? (abs/1000).toFixed(1)+'k' : abs.toFixed(2).replace(/\.00$/,'').replace(/(\.\d)0$/,'$1');
+  return (n >= 0 ? '+' : '-') + '$' + s;
+}
+
+function fmtAbs(n) {
+  return '$' + Math.abs(n).toFixed(2).replace(/\.00$/,'').replace(/(\.\d)0$/,'$1');
+}
+
+function initials(name) {
+  return name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+}
+
+function colorClass(n) { return n > 0 ? 'green' : n < 0 ? 'red' : ''; }
+
+let _toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// ═══════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════
+let currentScreen = 'dashboard';
+let prevScreen = null;
+const navScreens = ['dashboard','players','add-session','sessions','leaderboard'];
+
+function showScreen(name, push=true) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const target = document.getElementById('screen-' + name);
+  if (!target) return;
+  target.classList.add('active');
+
+  // nav highlight
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const nb = document.getElementById('nav-' + name);
+  if (nb) nb.classList.add('active');
+
+  // show/hide nav
+  const isMain = navScreens.includes(name);
+  document.getElementById('nav').style.display = isMain ? 'flex' : 'none';
+
+  if (push) { prevScreen = currentScreen; }
+  currentScreen = name;
+
+  // render
+  const renders = {
+    'dashboard': renderDashboard,
+    'players': renderPlayers,
+    'sessions': renderSessions,
+    'leaderboard': renderLeaderboard,
+    'add-session': initAddSession
+  };
+  if (renders[name]) renders[name]();
+}
+
+function goBack() { showScreen(prevScreen || 'dashboard'); }
+
+// ═══════════════════════════════════════════════
+//  DASHBOARD
+// ═══════════════════════════════════════════════
+function renderDashboard() {
+  const players = DB.players();
+  const sessions = DB.sessions();
+
+  document.getElementById('db-subtitle').textContent =
+    `${players.length} player${players.length!==1?'s':''} · ${sessions.length} session${sessions.length!==1?'s':''}`;
+
+  // Stats
+  let totalMoney = 0, totalSessions = sessions.length;
+  sessions.forEach(s => s.results.forEach(r => totalMoney += Math.abs(r.cashout - r.buyin)));
+
+  const statsHTML = `
+    <div class="stat-box">
+      <div class="stat-label">Sessions</div>
+      <div class="stat-value accent">${totalSessions}</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">Players</div>
+      <div class="stat-value accent">${players.length}</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">Money Played</div>
+      <div class="stat-value">${'$'+(totalMoney/2).toFixed(0)}</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">Biggest Pot</div>
+      <div class="stat-value gold">${sessions.length ? (() => {
+        let max = 0;
+        sessions.forEach(s => {
+          const tot = s.results.reduce((a,r) => a+r.buyin, 0);
+          if (tot > max) max = tot;
+        });
+        return '$'+max.toFixed(0);
+      })() : '—'}</div>
+    </div>
+  `;
+  document.getElementById('db-stats').innerHTML = statsHTML;
+
+  // Recent sessions
+  const recent = sessions.slice(0, 3);
+  if (!recent.length) {
+    document.getElementById('db-recent').innerHTML = `<div class="empty"><div class="empty-icon">🃏</div><div class="empty-title">No sessions yet</div><div class="empty-sub">Tap + to add your first session</div></div>`;
+  } else {
+    document.getElementById('db-recent').innerHTML = recent.map(s => sessionListItem(s)).join('');
+  }
+
+  // Top players
+  if (!players.length) {
+    document.getElementById('db-top-players').innerHTML = `<div style="color:var(--text3);font-size:14px;padding:8px 0">No players added yet.</div>`;
+  } else {
+    const ranked = players.map(p => ({ p, stats: DB.playerStats(p.id) }))
+      .sort((a,b) => b.stats.totalProfit - a.stats.totalProfit)
+      .slice(0, 3);
+    document.getElementById('db-top-players').innerHTML = ranked.map((item,i) => `
+      <div class="list-item" onclick="openPlayerDetail('${item.p.id}')">
+        <div class="rank-num rank-${i+1}">${i+1}</div>
+        <div class="list-item-avatar">${initials(item.p.name)}</div>
+        <div class="list-item-body">
+          <div class="list-item-name">${esc(item.p.name)}${item.p.nickname?` <span style="color:var(--text3);font-size:13px">"${esc(item.p.nickname)}"</span>`:''}</div>
+          <div class="list-item-sub">${item.stats.count} sessions</div>
+        </div>
+        <div class="list-item-end">
+          <div class="list-item-value ${colorClass(item.stats.totalProfit)}">${fmt(item.stats.totalProfit)}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  PLAYERS
+// ═══════════════════════════════════════════════
+function renderPlayers() {
+  const players = DB.players();
+  const el = document.getElementById('players-list');
+  if (!players.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">👤</div><div class="empty-title">No players yet</div><div class="empty-sub">Tap "Add" to create your first player</div></div>`;
+    return;
+  }
+  el.innerHTML = players.map(p => {
+    const stats = DB.playerStats(p.id);
+    return `
+      <div class="list-item" onclick="openPlayerDetail('${p.id}')">
+        <div class="list-item-avatar">${initials(p.name)}</div>
+        <div class="list-item-body">
+          <div class="list-item-name">${esc(p.name)}${p.nickname?` <span style="color:var(--text3);font-size:13px">"${esc(p.nickname)}"</span>`:''}</div>
+          <div class="list-item-sub">${stats.count} session${stats.count!==1?'s':''}</div>
+        </div>
+        <div class="list-item-end">
+          <div class="list-item-value ${colorClass(stats.totalProfit)}">${fmt(stats.totalProfit)}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+let _currentPlayerId = null;
+
+function openAddPlayerModal() {
+  document.getElementById('player-modal-title').textContent = 'Add Player';
+  document.getElementById('player-name').value = '';
+  document.getElementById('player-nickname').value = '';
+  document.getElementById('player-notes').value = '';
+  document.getElementById('player-edit-id').value = '';
+  document.getElementById('player-modal').classList.add('open');
+  setTimeout(() => document.getElementById('player-name').focus(), 350);
+}
+
+function closePlayerModal() { document.getElementById('player-modal').classList.remove('open'); }
+
+function savePlayer() {
+  const name = document.getElementById('player-name').value.trim();
+  if (!name) { toast('Name is required'); return; }
+  const id = document.getElementById('player-edit-id').value;
+  const data = {
+    name,
+    nickname: document.getElementById('player-nickname').value.trim(),
+    notes: document.getElementById('player-notes').value.trim()
+  };
+  if (id) {
+    DB.updatePlayer(id, data);
+    toast('Player updated');
+    // Refresh if on player detail
+    if (currentScreen === 'player-detail') openPlayerDetail(id);
+  } else {
+    data.id = uid();
+    DB.addPlayer(data);
+    toast('Player added');
+  }
+  closePlayerModal();
+  renderPlayers();
+}
+
+function editCurrentPlayer() {
+  const p = DB.getPlayer(_currentPlayerId);
+  if (!p) return;
+  document.getElementById('player-modal-title').textContent = 'Edit Player';
+  document.getElementById('player-name').value = p.name;
+  document.getElementById('player-nickname').value = p.nickname || '';
+  document.getElementById('player-notes').value = p.notes || '';
+  document.getElementById('player-edit-id').value = p.id;
+  document.getElementById('player-modal').classList.add('open');
+}
+
+function deleteCurrentPlayer() {
+  showConfirm('Delete Player?', 'All session data for this player will remain but they will be removed from the roster.', () => {
+    DB.deletePlayer(_currentPlayerId);
+    toast('Player deleted');
+    goBack();
+    renderPlayers();
+  });
+}
+
+function openPlayerDetail(id) {
+  _currentPlayerId = id;
+  renderPlayerDetail(id);
+  showScreen('player-detail', true);
+}
+
+function renderPlayerDetail(id) {
+  const p = DB.getPlayer(id);
+  if (!p) return;
+  const stats = DB.playerStats(id);
+  const el = document.getElementById('player-detail-content');
+
+  // Build session history rows
+  const sessRows = stats.sessions.map(s => {
+    const r = s.results.find(r => r.playerId === id);
+    const profit = r.cashout - r.buyin;
+    return `
+      <div class="list-item" onclick="openSessionDetail('${s.id}')">
+        <div class="list-item-body">
+          <div class="list-item-name">${esc(s.name)}</div>
+          <div class="list-item-sub">${s.results.length} players · ${fmtAbs(r.buyin)} buy-in</div>
+        </div>
+        <div class="list-item-end">
+          <div class="list-item-value ${colorClass(profit)}">${fmt(profit)}</div>
+        </div>
+      </div>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div style="text-align:center;padding:24px 0 20px">
+      <div style="width:72px;height:72px;border-radius:50%;background:var(--accent-bg);border:2px solid rgba(124,111,255,0.4);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:28px;font-weight:800;color:var(--accent)">${initials(p.name)}</div>
+      <div style="font-size:24px;font-weight:800;letter-spacing:-0.5px">${esc(p.name)}</div>
+      ${p.nickname ? `<div style="color:var(--text3);font-size:14px;margin-top:4px">"${esc(p.nickname)}"</div>` : ''}
+      ${p.notes ? `<div style="color:var(--text2);font-size:13px;margin-top:8px;max-width:280px;margin-left:auto;margin-right:auto">${esc(p.notes)}</div>` : ''}
+    </div>
+    <div class="stat-grid">
+      <div class="stat-box">
+        <div class="stat-label">Total Profit</div>
+        <div class="stat-value ${colorClass(stats.totalProfit)}">${fmt(stats.totalProfit)}</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Sessions</div>
+        <div class="stat-value accent">${stats.count}</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Avg/Session</div>
+        <div class="stat-value ${colorClass(stats.avgProfit)}">${stats.count ? fmt(stats.avgProfit) : '—'}</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Win Rate</div>
+        <div class="stat-value ${stats.winRate>=50?'green':'red'}">${stats.count ? stats.winRate.toFixed(0)+'%' : '—'}</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Biggest Win</div>
+        <div class="stat-value green">${stats.biggestWin > 0 ? fmt(stats.biggestWin) : '—'}</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Biggest Loss</div>
+        <div class="stat-value red">${stats.biggestLoss < 0 ? fmt(stats.biggestLoss) : '—'}</div>
+      </div>
+    </div>
+    ${stats.count > 0 ? `
+    <div class="card" style="margin-bottom:12px">
+      <div class="section-title" style="margin-bottom:12px">Profit Over Time</div>
+      <canvas id="profit-chart" height="160"></canvas>
+    </div>` : ''}
+    <div class="section-title">Session History</div>
+    ${stats.sessions.length ? sessRows : '<div style="color:var(--text3);font-size:14px;padding:8px 0">No sessions yet.</div>'}
+    <div style="height:8px"></div>
+  `;
+
+  if (stats.count > 0) {
+    requestAnimationFrame(() => drawProfitChart(id));
+  }
+}
+
+function drawProfitChart(playerId) {
+  const canvas = document.getElementById('profit-chart');
+  if (!canvas) return;
+  const stats = DB.playerStats(playerId);
+  const sessions = [...stats.sessions].reverse(); // oldest first
+
+  const ctx = canvas.getContext('2d');
+  const W = canvas.offsetWidth || 300;
+  canvas.width = W * window.devicePixelRatio;
+  canvas.height = 160 * window.devicePixelRatio;
+  canvas.style.width = W + 'px';
+  canvas.style.height = '160px';
+  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+  const profits = [];
+  let running = 0;
+  sessions.forEach(s => {
+    const r = s.results.find(r => r.playerId === playerId);
+    if (r) running += r.cashout - r.buyin;
+    profits.push(running);
+  });
+
+  if (profits.length < 2) {
+    // Single point
+    profits.unshift(0);
+  }
+
+  const minV = Math.min(0, ...profits);
+  const maxV = Math.max(0, ...profits);
+  const range = maxV - minV || 1;
+  const pad = { top: 16, bottom: 24, left: 40, right: 12 };
+  const cW = W - pad.left - pad.right;
+  const cH = 160 - pad.top - pad.bottom;
+
+  const xPos = i => pad.left + (i / (profits.length - 1)) * cW;
+  const yPos = v => pad.top + (1 - (v - minV) / range) * cH;
+
+  // Zero line
+  const zeroY = yPos(0);
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4,4]);
+  ctx.beginPath();
+  ctx.moveTo(pad.left, zeroY);
+  ctx.lineTo(pad.left + cW, zeroY);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Fill gradient
+  const lastProfit = profits[profits.length - 1];
+  const isPositive = lastProfit >= 0;
+  const grad = ctx.createLinearGradient(0, pad.top, 0, pad.top + cH);
+  if (isPositive) {
+    grad.addColorStop(0, 'rgba(0,230,118,0.3)');
+    grad.addColorStop(1, 'rgba(0,230,118,0)');
+  } else {
+    grad.addColorStop(0, 'rgba(255,82,82,0)');
+    grad.addColorStop(1, 'rgba(255,82,82,0.3)');
+  }
+
+  ctx.beginPath();
+  ctx.moveTo(xPos(0), yPos(profits[0]));
+  profits.forEach((v,i) => { if (i>0) ctx.lineTo(xPos(i), yPos(v)); });
+  ctx.lineTo(xPos(profits.length-1), pad.top + cH);
+  ctx.lineTo(xPos(0), pad.top + cH);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Line
+  ctx.beginPath();
+  ctx.moveTo(xPos(0), yPos(profits[0]));
+  profits.forEach((v,i) => { if (i>0) ctx.lineTo(xPos(i), yPos(v)); });
+  ctx.strokeStyle = isPositive ? '#00e676' : '#ff5252';
+  ctx.lineWidth = 2;
+  ctx.lineJoin = 'round';
+  ctx.stroke();
+
+  // Dots
+  profits.forEach((v,i) => {
+    ctx.beginPath();
+    ctx.arc(xPos(i), yPos(v), 3.5, 0, Math.PI*2);
+    ctx.fillStyle = isPositive ? '#00e676' : '#ff5252';
+    ctx.fill();
+  });
+
+  // Y labels
+  ctx.fillStyle = 'rgba(144,144,176,0.7)';
+  ctx.font = `${11 * window.devicePixelRatio / window.devicePixelRatio}px -apple-system,sans-serif`;
+  ctx.textAlign = 'right';
+  ctx.fillText(fmt(maxV).replace('+',''), pad.left - 4, pad.top + 4);
+  ctx.fillText(fmt(minV).replace('+',''), pad.left - 4, pad.top + cH + 4);
+
+  // X labels (session count)
+  ctx.textAlign = 'center';
+  ctx.fillText('1', xPos(0), 160 - 6);
+  ctx.fillText(String(profits.length), xPos(profits.length-1), 160 - 6);
+}
+
+// ═══════════════════════════════════════════════
+//  ADD SESSION
+// ═══════════════════════════════════════════════
+let _editingSessionId = null;
+let _selectedPlayers = new Set();
+
+function initAddSession() {
+  if (_editingSessionId) return; // Keep state if editing
+  _editingSessionId = null;
+  _selectedPlayers = new Set();
+  document.getElementById('sess-name').value = '';
+  document.getElementById('sess-notes').value = '';
+  document.getElementById('add-session-title').textContent = 'New Session';
+  document.getElementById('cancel-session-btn').style.display = 'none';
+  document.getElementById('save-session-btn').textContent = 'Save Session';
+  renderPlayerToggles();
+  renderSessionPlayerRows();
+  updateBalanceBar();
+}
+
+function renderPlayerToggles() {
+  const players = DB.players();
+  const el = document.getElementById('player-toggles');
+  if (!players.length) {
+    el.innerHTML = `<div style="color:var(--text3);font-size:14px">Add players first from the Players tab.</div>`;
+    return;
+  }
+  el.innerHTML = players.map(p => `
+    <button class="player-toggle ${_selectedPlayers.has(p.id)?'selected':''}"
+      onclick="togglePlayer('${p.id}')">${esc(p.name)}</button>
+  `).join('');
+}
+
+function togglePlayer(id) {
+  if (_selectedPlayers.has(id)) _selectedPlayers.delete(id);
+  else _selectedPlayers.add(id);
+  renderPlayerToggles();
+  renderSessionPlayerRows();
+  updateBalanceBar();
+}
+
+function renderSessionPlayerRows() {
+  const el = document.getElementById('session-player-rows');
+  const players = DB.players().filter(p => _selectedPlayers.has(p.id));
+  if (!players.length) {
+    el.innerHTML = `<div style="color:var(--text3);font-size:14px;padding:8px 0;margin-bottom:8px">Select players above to enter results.</div>`;
+    return;
+  }
+  el.innerHTML = players.map(p => `
+    <div class="session-player-row">
+      <div class="row-name">
+        <span>${esc(p.name)}</span>
+        <span class="profit-preview-inline" id="profit-${p.id}"></span>
+      </div>
+      <div class="row-inputs">
+        <div class="mini-field">
+          <label>Buy-in $</label>
+          <input type="number" id="buyin-${p.id}" placeholder="0" min="0" step="0.01"
+            oninput="updateProfitPreview('${p.id}'); updateBalanceBar()">
+        </div>
+        <div class="mini-field">
+          <label>Cash-out $</label>
+          <input type="number" id="cashout-${p.id}" placeholder="0" min="0" step="0.01"
+            oninput="updateProfitPreview('${p.id}'); updateBalanceBar()">
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  // Restore values if editing
+  if (_editingSessionId) {
+    const sess = DB.getSession(_editingSessionId);
+    if (sess) {
+      sess.results.forEach(r => {
+        const bi = document.getElementById('buyin-'+r.playerId);
+        const co = document.getElementById('cashout-'+r.playerId);
+        if (bi) bi.value = r.buyin;
+        if (co) co.value = r.cashout;
+        updateProfitPreview(r.playerId);
+      });
+    }
+  }
+}
+
+function updateProfitPreview(playerId) {
+  const bi = parseFloat(document.getElementById('buyin-'+playerId)?.value) || 0;
+  const co = parseFloat(document.getElementById('cashout-'+playerId)?.value) || 0;
+  const profit = co - bi;
+  const el = document.getElementById('profit-'+playerId);
+  if (el) {
+    if (bi === 0 && co === 0) { el.textContent = ''; return; }
+    el.textContent = fmt(profit);
+    el.style.color = profit > 0 ? 'var(--green)' : profit < 0 ? 'var(--red)' : 'var(--text3)';
+    el.style.fontSize = '14px';
+    el.style.fontWeight = '600';
+  }
+}
+
+function updateBalanceBar() {
+  const players = DB.players().filter(p => _selectedPlayers.has(p.id));
+  let totalBuyin = 0, totalCashout = 0;
+  players.forEach(p => {
+    totalBuyin += parseFloat(document.getElementById('buyin-'+p.id)?.value) || 0;
+    totalCashout += parseFloat(document.getElementById('cashout-'+p.id)?.value) || 0;
+  });
+  const diff = totalCashout - totalBuyin;
+  const valEl = document.getElementById('balance-val');
+  const warnEl = document.getElementById('balance-warning');
+  const barEl = document.getElementById('balance-bar');
+
+  if (!players.length) {
+    valEl.textContent = '—';
+    valEl.style.color = 'var(--text3)';
+    warnEl.classList.remove('show');
+    return;
+  }
+
+  const balanced = Math.abs(diff) < 0.01;
+  valEl.textContent = balanced ? '✓ Balanced' : `Off by ${fmt(diff)}`;
+  valEl.style.color = balanced ? 'var(--green)' : 'var(--gold)';
+  barEl.style.borderColor = balanced ? 'rgba(0,230,118,0.2)' : 'rgba(255,215,0,0.2)';
+  warnEl.classList.toggle('show', !balanced && (totalBuyin > 0 || totalCashout > 0));
+}
+
+function saveSession() {
+  const name = document.getElementById('sess-name').value.trim();
+  if (!name) { toast('Session name is required'); return; }
+
+  const players = DB.players().filter(p => _selectedPlayers.has(p.id));
+  if (!players.length) { toast('Select at least one player'); return; }
+
+  const results = players.map(p => ({
+    playerId: p.id,
+    buyin: parseFloat(document.getElementById('buyin-'+p.id)?.value) || 0,
+    cashout: parseFloat(document.getElementById('cashout-'+p.id)?.value) || 0
+  }));
+
+  const totalBuyin = results.reduce((a,r) => a+r.buyin, 0);
+  const totalCashout = results.reduce((a,r) => a+r.cashout, 0);
+  const diff = Math.abs(totalCashout - totalBuyin);
+
+  const doSave = () => {
+    const sessData = {
+      name,
+      notes: document.getElementById('sess-notes').value.trim(),
+      results,
+      createdAt: Date.now()
+    };
+    if (_editingSessionId) {
+      DB.updateSession(_editingSessionId, sessData);
+      toast('Session updated');
+      const sid = _editingSessionId;
+      resetAddSession();
+      openSessionDetail(sid);
+    } else {
+      sessData.id = uid();
+      DB.addSession(sessData);
+      toast('Session saved!');
+      resetAddSession();
+      showScreen('sessions');
+    }
+  };
+
+  if (diff > 0.01) {
+    showConfirm('Unbalanced Session', `Buy-ins and cash-outs differ by ${fmt(totalCashout-totalBuyin)}. Save anyway?`, doSave, 'Save Anyway', false);
+  } else {
+    doSave();
+  }
+}
+
+function resetAddSession() {
+  _editingSessionId = null;
+  _selectedPlayers = new Set();
+  document.getElementById('sess-name').value = '';
+  document.getElementById('sess-notes').value = '';
+  document.getElementById('add-session-title').textContent = 'New Session';
+  document.getElementById('cancel-session-btn').style.display = 'none';
+  renderPlayerToggles();
+  renderSessionPlayerRows();
+  updateBalanceBar();
+}
+
+function cancelSessionEdit() {
+  const sid = _editingSessionId;
+  resetAddSession();
+  if (sid) openSessionDetail(sid);
+  else showScreen('sessions');
+}
+
+// ═══════════════════════════════════════════════
+//  SESSIONS
+// ═══════════════════════════════════════════════
+function renderSessions() {
+  const sessions = DB.sessions();
+  document.getElementById('sessions-count').textContent = sessions.length + ' session' + (sessions.length!==1?'s':'');
+  const el = document.getElementById('sessions-list');
+  if (!sessions.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">🃏</div><div class="empty-title">No sessions yet</div><div class="empty-sub">Tap the + button to record your first game</div></div>`;
+    return;
+  }
+  el.innerHTML = sessions.map(s => sessionListItem(s)).join('');
+}
+
+function sessionListItem(s) {
+  const sorted = [...s.results].sort((a,b) => (b.cashout-b.buyin) - (a.cashout-a.buyin));
+  const winner = sorted[0];
+  const winnerName = winner ? (DB.getPlayer(winner.playerId)?.name || '?') : '?';
+  const winnerProfit = winner ? (winner.cashout - winner.buyin) : 0;
+  return `
+    <div class="list-item" onclick="openSessionDetail('${s.id}')">
+      <div style="width:36px;height:36px;border-radius:10px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">🃏</div>
+      <div class="list-item-body">
+        <div class="list-item-name">${esc(s.name)}</div>
+        <div class="list-item-sub">${s.results.length} players · 🏆 ${esc(winnerName)}</div>
+      </div>
+      <div class="list-item-end">
+        <div class="list-item-value green">${fmt(winnerProfit)}</div>
+      </div>
+    </div>`;
+}
+
+let _currentSessionId = null;
+
+function openSessionDetail(id) {
+  _currentSessionId = id;
+  renderSessionDetail(id);
+  showScreen('detail', true);
+}
+
+function renderSessionDetail(id) {
+  const s = DB.getSession(id);
+  if (!s) return;
+  const el = document.getElementById('detail-content');
+
+  const sorted = [...s.results].sort((a,b) => (b.cashout-b.buyin)-(a.cashout-a.buyin));
+
+  const rows = sorted.map((r,i) => {
+    const p = DB.getPlayer(r.playerId);
+    const profit = r.cashout - r.buyin;
+    const cls = profit > 0 ? 'winner' : profit < 0 ? 'loser' : '';
+    return `
+      <tr class="${cls}">
+        <td><strong>${esc(p?.name || '?')}</strong>${p?.nickname ? `<br><span style="color:var(--text3);font-size:11px">${esc(p.nickname)}</span>`:''}</td>
+        <td>${fmtAbs(r.buyin)}</td>
+        <td>${fmtAbs(r.cashout)}</td>
+        <td class="col-profit ${colorClass(profit)}">${fmt(profit)}</td>
+      </tr>`;
+  }).join('');
+
+  const totalBuyin = s.results.reduce((a,r)=>a+r.buyin,0);
+  const totalCashout = s.results.reduce((a,r)=>a+r.cashout,0);
+
+  el.innerHTML = `
+    <div style="padding:0 0 4px">
+      <div style="font-size:26px;font-weight:800;letter-spacing:-0.5px;margin-bottom:4px">${esc(s.name)}</div>
+      <div style="color:var(--text3);font-size:14px">${s.results.length} players · Total pot: ${fmtAbs(totalBuyin)}</div>
+      ${s.notes ? `<div style="color:var(--text2);font-size:13px;margin-top:8px">${esc(s.notes)}</div>` : ''}
+    </div>
+    <div class="divider"></div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Player</th>
+            <th>Buy-in</th>
+            <th>Cash-out</th>
+            <th>P/L</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <div style="height:16px"></div>
+    <div class="section-title">Session Summary</div>
+    <div class="stat-grid">
+      <div class="stat-box">
+        <div class="stat-label">Total Pot</div>
+        <div class="stat-value">${fmtAbs(totalBuyin)}</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Players</div>
+        <div class="stat-value accent">${s.results.length}</div>
+      </div>
+    </div>
+    <div style="height:8px"></div>
+  `;
+}
+
+function editCurrentSession() {
+  const s = DB.getSession(_currentSessionId);
+  if (!s) return;
+  _editingSessionId = s.id;
+  _selectedPlayers = new Set(s.results.map(r => r.playerId));
+  document.getElementById('sess-name').value = s.name;
+  document.getElementById('sess-notes').value = s.notes || '';
+  document.getElementById('add-session-title').textContent = 'Edit Session';
+  document.getElementById('cancel-session-btn').style.display = 'block';
+  document.getElementById('save-session-btn').textContent = 'Update Session';
+
+  showScreen('add-session');
+  renderPlayerToggles();
+  renderSessionPlayerRows();
+  updateBalanceBar();
+  document.getElementById('add-session-scroll').scrollTop = 0;
+}
+
+function deleteCurrentSession() {
+  showConfirm('Delete Session?', `"${DB.getSession(_currentSessionId)?.name}" will be permanently deleted.`, () => {
+    DB.deleteSession(_currentSessionId);
+    toast('Session deleted');
+    goBack();
+    renderSessions();
+  });
+}
+
+// ═══════════════════════════════════════════════
+//  LEADERBOARD
+// ═══════════════════════════════════════════════
+let _lbMode = 'profit';
+
+function switchLbTab(mode, btn) {
+  _lbMode = mode;
+  document.querySelectorAll('.lb-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderLeaderboard();
+}
+
+function renderLeaderboard() {
+  const players = DB.players();
+  const el = document.getElementById('leaderboard-list');
+  if (!players.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">🏆</div><div class="empty-title">No players yet</div></div>`;
+    return;
+  }
+
+  const withStats = players.map(p => ({ p, stats: DB.playerStats(p.id) }));
+
+  let sorted;
+  if (_lbMode === 'profit') sorted = withStats.sort((a,b) => b.stats.totalProfit - a.stats.totalProfit);
+  else if (_lbMode === 'avg') sorted = withStats.sort((a,b) => b.stats.avgProfit - a.stats.avgProfit);
+  else sorted = withStats.sort((a,b) => b.stats.winRate - a.stats.winRate);
+
+  el.innerHTML = sorted.map((item, i) => {
+    const rankClass = i < 3 ? `rank-${i+1}` : 'rank-n';
+    let value, sub;
+    if (_lbMode === 'profit') {
+      value = fmt(item.stats.totalProfit);
+      sub = `${item.stats.count} sessions`;
+    } else if (_lbMode === 'avg') {
+      value = item.stats.count ? fmt(item.stats.avgProfit) : '—';
+      sub = `${item.stats.count} sessions`;
+    } else {
+      value = item.stats.count ? item.stats.winRate.toFixed(0)+'%' : '—';
+      sub = `${item.stats.count} played`;
+    }
+    const profit = item.stats.totalProfit;
+    const vcls = _lbMode === 'winrate'
+      ? (item.stats.winRate >= 50 ? 'green' : 'red')
+      : colorClass(_lbMode === 'profit' ? profit : item.stats.avgProfit);
+
+    return `
+      <div class="list-item" onclick="openPlayerDetail('${item.p.id}')">
+        <div class="rank-num ${rankClass}">${i+1}</div>
+        <div class="list-item-avatar">${initials(item.p.name)}</div>
+        <div class="list-item-body">
+          <div class="list-item-name">${esc(item.p.name)}</div>
+          <div class="list-item-sub">${sub}</div>
+        </div>
+        <div class="list-item-end">
+          <div class="list-item-value ${vcls}">${value}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════
+//  CONFIRM DIALOG
+// ═══════════════════════════════════════════════
+let _confirmCallback = null;
+
+function showConfirm(title, msg, onYes, yesLabel='Delete', isDanger=true) {
+  _confirmCallback = onYes;
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-msg').textContent = msg;
+  const yesBtn = document.querySelector('.confirm-actions .btn-danger, .confirm-actions .btn-primary');
+  if (yesBtn) {
+    yesBtn.textContent = yesLabel;
+    yesBtn.className = 'btn ' + (isDanger ? 'btn-danger' : 'btn-primary');
+  }
+  document.getElementById('confirm-overlay').classList.add('open');
+}
+
+function confirmYes() {
+  document.getElementById('confirm-overlay').classList.remove('open');
+  if (_confirmCallback) { _confirmCallback(); _confirmCallback = null; }
+}
+
+function confirmNo() {
+  document.getElementById('confirm-overlay').classList.remove('open');
+  _confirmCallback = null;
+}
+
+// ═══════════════════════════════════════════════
+//  ESCAPE HTML
+// ═══════════════════════════════════════════════
+function esc(str) {
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
+// ═══════════════════════════════════════════════
+//  CLOSE MODALS ON BACKDROP CLICK
+// ═══════════════════════════════════════════════
+document.getElementById('player-modal').addEventListener('click', function(e) {
+  if (e.target === this) closePlayerModal();
+});
+document.getElementById('confirm-overlay').addEventListener('click', function(e) {
+  if (e.target === this) confirmNo();
+});
+
+// ═══════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════
+showScreen('dashboard', false);
+</script>
+
 </body>
 </html>
