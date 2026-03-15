@@ -35,7 +35,7 @@ top: 0; left: 0;
 APP SHELL
 padding-top  = status bar / notch / dynamic island
 padding-bottom = home indicator
-We use env() only for layout spacing, NOT for colors.
+Safe areas driven by JS below.
 ──────────────────────────── */
 #app {
 position: fixed;
@@ -44,7 +44,7 @@ display: flex;
 flex-direction: column;
 background: #0d0d14;
 /* push content below notch/dynamic-island */
-padding-top: env(safe-area-inset-top, 44px);
+padding-top: var(–sat, 0px);
 }
 
 /* ────────────────────────────
@@ -56,16 +56,21 @@ flex-direction: column;
 flex: 1;
 overflow: hidden;
 background: #0d0d14;
+min-width: 0;
+width: 100%;
 }
 .screen.active { display: flex; }
 
 .scroll-area {
 flex: 1;
 overflow-y: auto;
+overflow-x: hidden;
 -webkit-overflow-scrolling: touch;
 overscroll-behavior: none;
 /* bottom padding = nav bar (58px) + home indicator */
-padding: 16px 16px calc(58px + env(safe-area-inset-bottom, 34px) + 12px);
+padding: 16px 16px calc(58px + var(–sab, 0px) + 12px);
+width: 100%;
+min-width: 0;
 }
 
 /* ────────────────────────────
@@ -109,7 +114,7 @@ display: flex;
 align-items: flex-start;
 z-index: 100;
 /* total height = buttons (58px) + home indicator gap */
-padding-bottom: env(safe-area-inset-bottom, 34px);
+padding-bottom: var(–sab, 0px);
 }
 .nav-btn {
 flex: 1;
@@ -221,7 +226,7 @@ color: #44445a; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom:
 }
 .field input,
 .field textarea {
-display: block; width: 100%;
+display: block; width: 100%; max-width: 100%;
 background: #13131e;
 border: 1px solid #2a2a3e;
 border-radius: 11px;
@@ -233,6 +238,7 @@ outline: none;
 appearance: none;
 transition: border-color 0.18s;
 font-family: inherit;
+box-sizing: border-box;
 }
 .field input:focus,
 .field textarea:focus { border-color: #7c6fff; }
@@ -318,17 +324,19 @@ color: #a89fff;
 .pr-row {
 background: #13131e; border: 1px solid #1e1e2e;
 border-radius: 12px; padding: 12px 14px; margin-bottom: 8px;
+width: 100%; min-width: 0; overflow: hidden;
 }
 .pr-head {
 display: flex; align-items: center; justify-content: space-between;
-margin-bottom: 10px;
+margin-bottom: 10px; min-width: 0;
 }
-.pr-name { font-size: 15px; font-weight: 600; color: #eeeef5; }
-.pr-preview { font-size: 13px; font-weight: 600; color: #44445a; }
-.pr-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.pr-name { font-size: 15px; font-weight: 600; color: #eeeef5; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+.pr-preview { font-size: 13px; font-weight: 600; color: #44445a; flex-shrink: 0; margin-left: 8px; }
+.pr-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; min-width: 0; }
+.pr-inputs > div { min-width: 0; }
 .mini-label { display: block; font-size: 10px; font-weight: 600; color: #44445a; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; }
 .mini-input {
-width: 100%; display: block;
+width: 100%; display: block; min-width: 0;
 background: #0d0d14; border: 1px solid #2a2a3e;
 border-radius: 9px; padding: 10px 12px;
 font-size: 16px; color: #eeeef5; outline: none;
@@ -397,7 +405,7 @@ border-radius: 20px 20px 0 0;
 border-top: 1px solid #2a2a3e;
 width: 100%; max-height: 88vh;
 display: flex; flex-direction: column;
-padding-bottom: env(safe-area-inset-bottom, 34px);
+padding-bottom: var(–sab, 0px);
 animation: sheetup 0.26s cubic-bezier(0.32,0.72,0,1);
 }
 @keyframes sheetup { from { transform: translateY(100%); } to { transform: translateY(0); } }
@@ -430,7 +438,7 @@ TOAST
 ──────────────────────────── */
 #toast {
 position: fixed;
-bottom: calc(58px + env(safe-area-inset-bottom, 34px) + 12px);
+bottom: calc(58px + var(–sab, 0px) + 12px);
 left: 50%; transform: translateX(-50%);
 background: #23233a; border: 1px solid #2a2a3e;
 color: #eeeef5; padding: 11px 22px;
@@ -442,6 +450,31 @@ opacity: 0; pointer-events: none; transition: opacity 0.22s;
 
 canvas { display: block; }
 </style>
+
+<script>
+// Detect real safe area insets and expose as CSS vars on :root.
+// Works on GitHub Pages, local file, and installed PWA alike.
+(function() {
+  var div = document.createElement('div');
+  div.style.cssText = [
+    'position:fixed','top:0','left:0','right:0','bottom:0',
+    'padding-top:env(safe-area-inset-top,0px)',
+    'padding-bottom:env(safe-area-inset-bottom,0px)',
+    'pointer-events:none','visibility:hidden','z-index:-1'
+  ].join(';');
+  document.documentElement.appendChild(div);
+  var cs = window.getComputedStyle(div);
+  var sat = parseFloat(cs.paddingTop)  || 0;
+  var sab = parseFloat(cs.paddingBottom) || 0;
+  document.documentElement.removeChild(div);
+  // Only apply top padding if running as installed PWA (status bar present)
+  // or if the device truly reports a non-zero inset.
+  // On GitHub Pages in browser: sat will be 0, so no wasted space.
+  var root = document.documentElement;
+  root.style.setProperty('--sat', sat + 'px');
+  root.style.setProperty('--sab', sab + 'px');
+})();
+</script>
 
 </head>
 <body>
