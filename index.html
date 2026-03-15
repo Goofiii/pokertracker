@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Poker Tracker">
@@ -82,7 +82,7 @@ overscroll-behavior: none;
 padding-top: 16px;
 padding-left: 16px;
 padding-right: 16px;
-padding-bottom: calc(58px + env(safe-area-inset-bottom, 0px) + 16px);
+padding-bottom: calc(58px + env(safe-area-inset-bottom, 0px) + 4px);
 width: 100%;
 box-sizing: border-box;
 }
@@ -456,7 +456,7 @@ TOAST
 ──────────────────────────── */
 #toast {
 position: fixed;
-bottom: calc(58px + env(safe-area-inset-bottom, 0px) + 12px);
+bottom: calc(58px + env(safe-area-inset-bottom, 0px) + 8px);
 left: 50%; transform: translateX(-50%);
 background: #23233a; border: 1px solid #2a2a3e;
 color: #eeeef5; padding: 11px 22px;
