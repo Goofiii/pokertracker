@@ -26,7 +26,7 @@
   --border: rgba(255,255,255,0.07);
   --border-subtle: rgba(255,255,255,0.04);
 
-  --nav-height: 84px;
+  --nav-height: 56px;
   --header-height: 60px;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -147,7 +147,7 @@ html, body {
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   padding-top: calc(var(--header-height) + var(--safe-top));
-  padding-bottom: calc(var(--nav-height) + var(--safe-bottom));
+  padding-bottom: calc(var(--nav-height) + max(var(--safe-bottom), 4px) + 8px);
   scroll-behavior: smooth;
 }
 
@@ -175,9 +175,10 @@ html, body {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid var(--border);
-  padding-bottom: var(--safe-bottom);
+  padding-bottom: max(var(--safe-bottom), 4px);
   display: flex;
-  height: calc(var(--nav-height) + var(--safe-bottom));
+  height: auto;
+  min-height: var(--nav-height);
 }
 
 .nav-item {
@@ -186,13 +187,13 @@ html, body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 3px;
   background: none;
   border: none;
   color: var(--text-muted);
   cursor: pointer;
   transition: color var(--transition);
-  padding: 8px 0 0;
+  padding: 8px 0 6px;
   min-height: 44px;
 }
 
@@ -207,15 +208,15 @@ html, body {
 }
 
 .nav-new-icon {
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   background: linear-gradient(135deg, var(--gold), #a0772e);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: 0 4px 16px rgba(201, 168, 76, 0.4);
-  margin-top: -8px;
+  margin-top: -6px;
 }
 
 .nav-new-icon svg { width: 22px; height: 22px; color: #000; stroke-width: 2.5; }
@@ -810,7 +811,7 @@ svg.sparkline {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  padding-bottom: var(--safe-bottom);
+  padding-bottom: max(var(--safe-bottom), 16px);
 }
 
 @keyframes slideUp {
@@ -895,7 +896,7 @@ svg.sparkline {
    ============================ */
 #toast {
   position: fixed;
-  bottom: calc(var(--nav-height) + var(--safe-bottom) + 16px);
+  bottom: calc(var(--nav-height) + max(var(--safe-bottom), 4px) + 12px);
   left: 50%;
   transform: translateX(-50%);
   background: var(--bg-elevated);
