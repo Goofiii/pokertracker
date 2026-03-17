@@ -28,6 +28,7 @@
 
   --nav-height: 56px;
   --header-height: 60px;
+  --status-bar: env(safe-area-inset-top, 44px);
 
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -80,7 +81,7 @@ html, body {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border);
-  padding-top: 0;
+  padding-top: env(safe-area-inset-top, 44px);
 }
 
 .header-inner {
@@ -144,13 +145,12 @@ html, body {
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-  padding-top: var(--header-height);
-  padding-bottom: calc(var(--nav-height) + 8px);
+  padding-top: calc(var(--header-height) + env(safe-area-inset-top, 44px));
+  padding-bottom: calc(var(--nav-height) + 4px);
   scroll-behavior: smooth;
 }
 
 .page {
-  min-height: 100%;
   padding: 20px 16px;
   animation: pageIn 0.28s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -175,6 +175,7 @@ html, body {
   border-top: 1px solid var(--border);
   display: flex;
   height: var(--nav-height);
+  align-items: stretch;
 }
 
 .nav-item {
@@ -891,7 +892,7 @@ svg.sparkline {
    ============================ */
 #toast {
   position: fixed;
-  bottom: calc(var(--nav-height) + 12px);
+  bottom: calc(var(--nav-height) + 10px);
   left: 50%;
   transform: translateX(-50%);
   background: var(--bg-elevated);
