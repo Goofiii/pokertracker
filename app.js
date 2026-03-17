@@ -154,7 +154,7 @@ function navigate(page, data = {}) {
 }
 
 function updateNav(page) {
-  document.querySelectorAll('.nav-item').forEach(el => {
+  document.querySelectorAll('.nav-item, .nav-new').forEach(el => {
     el.classList.toggle('active', el.dataset.page === page);
   });
 }
@@ -1158,7 +1158,7 @@ function closeModal() {
 // ============================
 // NAV INIT
 // ============================
-document.querySelectorAll('.nav-item').forEach(el => {
+document.querySelectorAll('.nav-item, .nav-new').forEach(el => {
   el.addEventListener('click', () => {
     const page = el.dataset.page;
     if (page === 'new-session') {
