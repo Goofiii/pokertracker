@@ -26,7 +26,7 @@
   --border: rgba(255,255,255,0.07);
   --border-subtle: rgba(255,255,255,0.04);
 
-  --nav-height: 56px;
+  --nav-height: 52px;
   --header-height: 60px;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -147,7 +147,7 @@ html, body {
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   padding-top: calc(var(--header-height) + var(--safe-top));
-  padding-bottom: calc(var(--nav-height) + max(var(--safe-bottom), 4px) + 8px);
+  padding-bottom: calc(var(--nav-height) + env(safe-area-inset-bottom, 0px) + 4px);
   scroll-behavior: smooth;
 }
 
@@ -175,10 +175,9 @@ html, body {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid var(--border);
-  padding-bottom: max(var(--safe-bottom), 4px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   display: flex;
-  height: auto;
-  min-height: var(--nav-height);
+  height: calc(var(--nav-height) + env(safe-area-inset-bottom, 0px));
 }
 
 .nav-item {
@@ -193,7 +192,7 @@ html, body {
   color: var(--text-muted);
   cursor: pointer;
   transition: color var(--transition);
-  padding: 8px 0 6px;
+  padding: 6px 0;
   min-height: 44px;
 }
 
@@ -811,7 +810,7 @@ svg.sparkline {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  padding-bottom: max(var(--safe-bottom), 16px);
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 12px);
 }
 
 @keyframes slideUp {
@@ -896,7 +895,7 @@ svg.sparkline {
    ============================ */
 #toast {
   position: fixed;
-  bottom: calc(var(--nav-height) + max(var(--safe-bottom), 4px) + 12px);
+  bottom: calc(var(--nav-height) + env(safe-area-inset-bottom, 0px) + 10px);
   left: 50%;
   transform: translateX(-50%);
   background: var(--bg-elevated);
