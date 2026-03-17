@@ -165,9 +165,9 @@ html, body {
   align-items: center;
   background: rgba(10,10,10,0.95);
   border-top: 1px solid var(--border);
-  padding-bottom: 12px;
-  padding-top: 4px;
-  height: calc(var(--nav-height) + 12px);
+  padding-bottom: 18px;
+  padding-top: 6px;
+  height: calc(var(--nav-height) + 24px);
 }
 
 .nav-item {
