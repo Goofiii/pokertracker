@@ -72,10 +72,8 @@ html, body {
    HEADER
    ============================ */
 #app-header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
+  flex-shrink: 0;
+  position: relative;
   z-index: 100;
   background: rgba(10,10,10,0.92);
   backdrop-filter: blur(20px);
@@ -145,8 +143,6 @@ html, body {
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-  padding-top: calc(var(--header-height) + env(safe-area-inset-top, 44px));
-  padding-bottom: calc(var(--nav-height) + 4px);
   scroll-behavior: smooth;
 }
 
@@ -164,17 +160,11 @@ html, body {
    BOTTOM NAVIGATION
    ============================ */
 #bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
-  background: rgba(10,10,10,0.95);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid var(--border);
+  flex-shrink: 0;
   display: flex;
   height: var(--nav-height);
+  background: rgba(10,10,10,0.95);
+  border-top: 1px solid var(--border);
   align-items: stretch;
 }
 
