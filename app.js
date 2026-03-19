@@ -12,26 +12,24 @@ function loadDB() {
 }
 
 function migrateDB(data) {
-  // Ensure top-level arrays exist
   if (!data.players) data.players = [];
   if (!data.sessions) data.sessions = [];
 
-  // Patch every session with missing fields
-  data.sessions = data.sessions.map(s => ({
-    durationMinutes: 0,
-    hands: 0,
-    notes: '',
-    results: [],
-    ...s,
-    // Ensure every result has buyin/cashout as numbers
-    results: (s.results || []).map(r => ({
+  data.sessions = data.sessions.map(s => {
+    const results = (s.results || []).map(r => ({
       ...r,
       buyin: Number(r.buyin) || 0,
       cashout: Number(r.cashout) || 0,
-    })),
-  }));
+    }));
+    return {
+      durationMinutes: 0,
+      hands: 0,
+      notes: '',
+      ...s,
+      results,
+    };
+  });
 
-  // Patch every player with missing fields
   data.players = data.players.map(p => ({
     nickname: '',
     notes: '',
@@ -142,7 +140,7 @@ function fmtDuration(minutes) {
   return `${h}h ${m}m`;
 }
 
-
+function colorClass(amount) {
   if (amount > 0) return 'amount-green';
   if (amount < 0) return 'amount-red';
   return 'amount-neutral';
@@ -585,6 +583,10 @@ function renderSessionStep1(main, headerActions) {
         <input class="form-input" id="s-name" type="text" placeholder="e.g. Friday Night, Game #12" value="${sessionDraft.name || ''}" />
       </div>
       <div class="form-group">
+        <label class="form-label">Date</label>
+        <input class="form-input" id="s-date" type="date" value="${sessionDraft.date ? sessionDraft.date.slice(0,10) : new Date().toISOString().slice(0,10)}" />
+      </div>
+      <div class="form-group">
         <label class="form-label">Hands Played <span style="color:var(--text-muted)">(optional)</span></label>
         <input class="form-input" id="s-hands" type="number" inputmode="numeric" placeholder="e.g. 120" value="${sessionDraft.hands || ''}" />
       </div>
@@ -619,6 +621,7 @@ function sessionStep1Next() {
   const name = document.getElementById('s-name').value.trim();
   if (!name) { showToast('Please enter a session name', 'error'); return; }
   sessionDraft.name = name;
+  sessionDraft.date = document.getElementById('s-date').value ? new Date(document.getElementById('s-date').value + 'T12:00:00').toISOString() : new Date().toISOString();
   sessionDraft.hands = parseInt(document.getElementById('s-hands').value) || 0;
   sessionDraft.durationHours = parseInt(document.getElementById('s-hours').value) || 0;
   sessionDraft.durationMinutes = parseInt(document.getElementById('s-minutes').value) || 0;
@@ -812,7 +815,7 @@ function saveSession() {
     // Edit existing
     const idx = db.sessions.findIndex(s => s.id === sessionDraft.id);
     if (idx !== -1) {
-      db.sessions[idx] = { ...db.sessions[idx], name: sessionDraft.name, hands: sessionDraft.hands, durationMinutes: (sessionDraft.durationHours || 0) * 60 + (sessionDraft.durationMinutes || 0), notes: sessionDraft.notes, results };
+      db.sessions[idx] = { ...db.sessions[idx], name: sessionDraft.name, date: sessionDraft.date, hands: sessionDraft.hands, durationMinutes: (sessionDraft.durationHours || 0) * 60 + (sessionDraft.durationMinutes || 0), notes: sessionDraft.notes, results };
       saveDB();
       sessionDraft = null;
       showToast('Session updated', 'success');
@@ -825,10 +828,10 @@ function saveSession() {
   const session = {
     id: uid(),
     name: sessionDraft.name,
+    date: sessionDraft.date || new Date().toISOString(),
     hands: sessionDraft.hands,
     durationMinutes: (sessionDraft.durationHours || 0) * 60 + (sessionDraft.durationMinutes || 0),
     notes: sessionDraft.notes,
-    date: new Date().toISOString(),
     results,
   };
 

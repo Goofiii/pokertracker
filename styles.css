@@ -497,6 +497,10 @@ html, body {
 
 .form-input::placeholder { color: var(--text-muted); }
 
+input[type="date"].form-input {
+  color-scheme: dark;
+}
+
 .form-input.error { border-color: var(--red); }
 
 textarea.form-input {
