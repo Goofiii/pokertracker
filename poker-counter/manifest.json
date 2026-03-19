@@ -2,7 +2,7 @@
   "name": "Poker Counter",
   "short_name": "Poker Counter",
   "description": "Live poker session hand counter & timer",
-  "start_url": "./counter.html",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0a0a0a",
   "theme_color": "#0a0a0a",
