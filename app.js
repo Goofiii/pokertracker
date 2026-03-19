@@ -103,14 +103,18 @@ function icon(name, { size = 18, color = 'currentColor', style = '' } = {}) {
 // UTILS
 // ============================
 const AVATAR_COLORS = [
-  { key: 'avatar-red', hex: '#c0392b' },
-  { key: 'avatar-orange', hex: '#e67e22' },
-  { key: 'avatar-gold', hex: '#f39c12' },
-  { key: 'avatar-green', hex: '#27ae60' },
-  { key: 'avatar-teal', hex: '#16a085' },
-  { key: 'avatar-blue', hex: '#2980b9' },
-  { key: 'avatar-purple', hex: '#8e44ad' },
-  { key: 'avatar-gray', hex: '#606060' },
+  { key: 'avatar-red',     hex: '#c0392b' },
+  { key: 'avatar-coral',   hex: '#e8533a' },
+  { key: 'avatar-orange',  hex: '#e67e22' },
+  { key: 'avatar-gold',    hex: '#f39c12' },
+  { key: 'avatar-lime',    hex: '#7cb518' },
+  { key: 'avatar-green',   hex: '#27ae60' },
+  { key: 'avatar-teal',    hex: '#16a085' },
+  { key: 'avatar-cyan',    hex: '#0891b2' },
+  { key: 'avatar-blue',    hex: '#2980b9' },
+  { key: 'avatar-indigo',  hex: '#4338ca' },
+  { key: 'avatar-purple',  hex: '#8e44ad' },
+  { key: 'avatar-pink',    hex: '#c2185b' },
 ];
 
 function uid() {
