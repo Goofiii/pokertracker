@@ -5,6 +5,7 @@ const APP_ASSETS = [
   './styles.css',
   './app.js',
   './manifest.json',
+  './counter.html',
 ];
 
 // Install: cache all app assets
