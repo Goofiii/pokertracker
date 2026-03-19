@@ -11,11 +11,42 @@ function loadDB() {
   return { players: [], sessions: [] };
 }
 
+function migrateDB(data) {
+  // Ensure top-level arrays exist
+  if (!data.players) data.players = [];
+  if (!data.sessions) data.sessions = [];
+
+  // Patch every session with missing fields
+  data.sessions = data.sessions.map(s => ({
+    durationMinutes: 0,
+    hands: 0,
+    notes: '',
+    results: [],
+    ...s,
+    // Ensure every result has buyin/cashout as numbers
+    results: (s.results || []).map(r => ({
+      ...r,
+      buyin: Number(r.buyin) || 0,
+      cashout: Number(r.cashout) || 0,
+    })),
+  }));
+
+  // Patch every player with missing fields
+  data.players = data.players.map(p => ({
+    nickname: '',
+    notes: '',
+    color: 'avatar-blue',
+    ...p,
+  }));
+
+  return data;
+}
+
 function saveDB() {
   localStorage.setItem(DB_KEY, JSON.stringify(db));
 }
 
-let db = loadDB();
+let db = migrateDB(loadDB());
 
 // ============================
 // SVG ICONS
@@ -519,10 +550,10 @@ function renderNewSession(main, data, headerActions) {
       sessionDraft = { ...existing, id: existing.id };
       sessionDraft.durationHours = Math.floor((existing.durationMinutes || 0) / 60);
       sessionDraft.durationMinutes = (existing.durationMinutes || 0) % 60;
-      sessionDraft.players = existing.results.map(r => ({
+      sessionDraft.players = (existing.results || []).map(r => ({
         playerId: r.playerId,
-        buyin: r.buyin.toString(),
-        cashout: r.cashout.toString(),
+        buyin: (Number(r.buyin) || 0).toString(),
+        cashout: (Number(r.cashout) || 0).toString(),
       }));
       data.loaded = true;
     }
