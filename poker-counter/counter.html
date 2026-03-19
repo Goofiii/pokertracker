@@ -106,8 +106,8 @@
     .ctrl-reset { background:var(--bg-card); border:1px solid var(--border); color:var(--text-secondary); flex:0 0 52px; padding:14px 0; }
 
     /* ── BOTTOM NAV — exact poker-tracker dimensions ── */
-    #bottom-nav { flex-shrink:0; display:flex; align-items:center; background:rgba(10,10,10,0.95); border-top:1px solid var(--border); padding-bottom:26px; padding-top:8px; height:calc(var(--nav-height) + 34px); }
-    .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; background:none; border:none; color:var(--text-muted); cursor:pointer; transition:color var(--transition); padding:0; height:100%; }
+    #bottom-nav { flex-shrink:0; display:flex; align-items:center; background:rgba(10,10,10,0.95); border-top:1px solid var(--border); padding-bottom:env(safe-area-inset-bottom,0px); padding-top:0; height:calc(var(--nav-height) + env(safe-area-inset-bottom,0px)); }
+    .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; background:none; border:none; color:var(--text-muted); cursor:pointer; transition:color var(--transition); padding:8px 0 0; height:var(--nav-height); align-self:flex-start; }
     .nav-item svg { width:22px; height:22px; transition:var(--transition); }
     .nav-item span { font-size:10px; font-weight:500; letter-spacing:0.03em; }
     .nav-item.active { color:var(--gold); }
@@ -195,7 +195,7 @@
     .modal-btn-cancel { background:var(--bg-elevated); border:1px solid var(--border); color:var(--text-secondary); }
 
     /* ── TOAST ── */
-    #toast { position:fixed; bottom:calc(var(--nav-height) + 34px + 12px); left:50%; transform:translateX(-50%) translateY(10px); background:var(--bg-elevated); border:1px solid var(--border); color:var(--text-primary); padding:11px 20px; border-radius:var(--radius-full); font-size:13px; font-weight:500; z-index:300; white-space:nowrap; box-shadow:var(--shadow-elevated); opacity:0; transition:opacity 0.2s,transform 0.2s; pointer-events:none; }
+    #toast { position:fixed; bottom:calc(var(--nav-height) + env(safe-area-inset-bottom,0px) + 12px); left:50%; transform:translateX(-50%) translateY(10px); background:var(--bg-elevated); border:1px solid var(--border); color:var(--text-primary); padding:11px 20px; border-radius:var(--radius-full); font-size:13px; font-weight:500; z-index:300; white-space:nowrap; box-shadow:var(--shadow-elevated); opacity:0; transition:opacity 0.2s,transform 0.2s; pointer-events:none; }
     #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
   </style>
 </head>
@@ -352,14 +352,14 @@
 const CL_TZ = 'America/Santiago';
 
 function fmtTime(ts) {
-  return new Date(ts).toLocaleTimeString('es-CL', { timeZone:CL_TZ, hour:'2-digit', minute:'2-digit', hour12:false });
+  return new Date(ts).toLocaleTimeString('en-US', { timeZone:CL_TZ, hour:'2-digit', minute:'2-digit', hour12:false });
 }
 function fmtDate(ts) {
   const d = new Date(ts);
-  const wd  = d.toLocaleDateString('es-CL', { timeZone:CL_TZ, weekday:'short' });
-  const day = d.toLocaleDateString('es-CL', { timeZone:CL_TZ, day:'numeric' });
-  const mo  = d.toLocaleDateString('es-CL', { timeZone:CL_TZ, month:'short' });
-  const yr  = d.toLocaleDateString('es-CL', { timeZone:CL_TZ, year:'numeric' });
+  const wd  = d.toLocaleDateString('en-US', { timeZone:CL_TZ, weekday:'short' });
+  const day = d.toLocaleDateString('en-US', { timeZone:CL_TZ, day:'numeric' });
+  const mo  = d.toLocaleDateString('en-US', { timeZone:CL_TZ, month:'short' });
+  const yr  = d.toLocaleDateString('en-US', { timeZone:CL_TZ, year:'numeric' });
   return `${cap(wd)} ${day} ${cap(mo)} ${yr}`;
 }
 function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1).replace('.',''); }
@@ -597,13 +597,13 @@ function renderHistory() {
           </div>
           <span class="pause-pip">
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
-            ${s.pauseCount} pausa${s.pauseCount !== 1 ? 's' : ''}
+            ${s.pauseCount} pause${s.pauseCount !== 1 ? 's' : ''}
           </span>
         </div>
         <div class="session-stats-grid">
-          <div class="sess-stat"><div class="sess-stat-label">Manos</div><div class="sess-stat-value gold">${s.hands}</div></div>
-          <div class="sess-stat"><div class="sess-stat-label">Duración</div><div class="sess-stat-value">${fmtDuration(s.elapsed)}</div></div>
-          <div class="sess-stat"><div class="sess-stat-label">M / Hora</div><div class="sess-stat-value">${s.hph !== null ? s.hph : '—'}</div></div>
+          <div class="sess-stat"><div class="sess-stat-label">Hands</div><div class="sess-stat-value gold">${s.hands}</div></div>
+          <div class="sess-stat"><div class="sess-stat-label">Duration</div><div class="sess-stat-value">${fmtDuration(s.elapsed)}</div></div>
+          <div class="sess-stat"><div class="sess-stat-label">H / Hour</div><div class="sess-stat-value">${s.hph !== null ? s.hph : '—'}</div></div>
         </div>
       </div>`;
   }).join('');
@@ -677,16 +677,16 @@ function showToast(msg) {
 
 /* ── HAND RANKINGS ── */
 const HANDS = [
-  { name:'Royal Flush',     desc:'A K Q J 10 — mismo palo',        cards:[{r:'A',s:'♠',hi:true},{r:'K',s:'♠',hi:true},{r:'Q',s:'♠',hi:true},{r:'J',s:'♠',hi:true},{r:'10',s:'♠',hi:true}] },
-  { name:'Straight Flush',  desc:'5 consecutivas — mismo palo',    cards:[{r:'9',s:'♥',hi:true},{r:'8',s:'♥',hi:true},{r:'7',s:'♥',hi:true},{r:'6',s:'♥',hi:true},{r:'5',s:'♥',hi:true}] },
-  { name:'Four of a Kind',  desc:'Cuatro del mismo valor',          cards:[{r:'K',s:'♠',hi:true},{r:'K',s:'♥',hi:true},{r:'K',s:'♦',hi:true},{r:'K',s:'♣',hi:true},{r:'2',s:'♦',hi:false}] },
-  { name:'Full House',      desc:'Trío + par',                      cards:[{r:'J',s:'♠',hi:true},{r:'J',s:'♥',hi:true},{r:'J',s:'♦',hi:true},{r:'7',s:'♣',hi:false},{r:'7',s:'♦',hi:false}] },
-  { name:'Flush',           desc:'Cinco del mismo palo',            cards:[{r:'A',s:'♣',hi:true},{r:'10',s:'♣',hi:false},{r:'8',s:'♣',hi:false},{r:'5',s:'♣',hi:false},{r:'3',s:'♣',hi:false}] },
-  { name:'Straight',        desc:'5 consecutivas — cualquier palo', cards:[{r:'9',s:'♦',hi:true},{r:'8',s:'♣',hi:false},{r:'7',s:'♠',hi:false},{r:'6',s:'♥',hi:false},{r:'5',s:'♦',hi:false}] },
-  { name:'Three of a Kind', desc:'Tres del mismo valor',            cards:[{r:'Q',s:'♠',hi:true},{r:'Q',s:'♥',hi:true},{r:'Q',s:'♦',hi:true},{r:'9',s:'♣',hi:false},{r:'4',s:'♦',hi:false}] },
-  { name:'Two Pair',        desc:'Dos pares distintos',             cards:[{r:'A',s:'♠',hi:true},{r:'A',s:'♦',hi:true},{r:'8',s:'♥',hi:false},{r:'8',s:'♣',hi:false},{r:'K',s:'♠',hi:false}] },
-  { name:'One Pair',        desc:'Dos del mismo valor',             cards:[{r:'10',s:'♠',hi:true},{r:'10',s:'♥',hi:true},{r:'A',s:'♦',hi:false},{r:'7',s:'♣',hi:false},{r:'3',s:'♦',hi:false}] },
-  { name:'High Card',       desc:'La carta más alta gana',          cards:[{r:'A',s:'♠',hi:true},{r:'J',s:'♥',hi:false},{r:'9',s:'♦',hi:false},{r:'6',s:'♣',hi:false},{r:'2',s:'♠',hi:false}] }
+  { name:'Royal Flush',     desc:'A K Q J 10 — same suit',        cards:[{r:'A',s:'♠',hi:true},{r:'K',s:'♠',hi:true},{r:'Q',s:'♠',hi:true},{r:'J',s:'♠',hi:true},{r:'10',s:'♠',hi:true}] },
+  { name:'Straight Flush',  desc:'Five in a row — same suit',    cards:[{r:'9',s:'♥',hi:true},{r:'8',s:'♥',hi:true},{r:'7',s:'♥',hi:true},{r:'6',s:'♥',hi:true},{r:'5',s:'♥',hi:true}] },
+  { name:'Four of a Kind',  desc:'Four of the same rank',          cards:[{r:'K',s:'♠',hi:true},{r:'K',s:'♥',hi:true},{r:'K',s:'♦',hi:true},{r:'K',s:'♣',hi:true},{r:'2',s:'♦',hi:false}] },
+  { name:'Full House',      desc:'Three of a kind + a pair',                      cards:[{r:'J',s:'♠',hi:true},{r:'J',s:'♥',hi:true},{r:'J',s:'♦',hi:true},{r:'7',s:'♣',hi:false},{r:'7',s:'♦',hi:false}] },
+  { name:'Flush',           desc:'Any five — same suit',            cards:[{r:'A',s:'♣',hi:true},{r:'10',s:'♣',hi:false},{r:'8',s:'♣',hi:false},{r:'5',s:'♣',hi:false},{r:'3',s:'♣',hi:false}] },
+  { name:'Straight',        desc:'Five in a row — any suit', cards:[{r:'9',s:'♦',hi:true},{r:'8',s:'♣',hi:false},{r:'7',s:'♠',hi:false},{r:'6',s:'♥',hi:false},{r:'5',s:'♦',hi:false}] },
+  { name:'Three of a Kind', desc:'Three of the same rank',            cards:[{r:'Q',s:'♠',hi:true},{r:'Q',s:'♥',hi:true},{r:'Q',s:'♦',hi:true},{r:'9',s:'♣',hi:false},{r:'4',s:'♦',hi:false}] },
+  { name:'Two Pair',        desc:'Two different pairs',             cards:[{r:'A',s:'♠',hi:true},{r:'A',s:'♦',hi:true},{r:'8',s:'♥',hi:false},{r:'8',s:'♣',hi:false},{r:'K',s:'♠',hi:false}] },
+  { name:'One Pair',        desc:'Two of the same rank',             cards:[{r:'10',s:'♠',hi:true},{r:'10',s:'♥',hi:true},{r:'A',s:'♦',hi:false},{r:'7',s:'♣',hi:false},{r:'3',s:'♦',hi:false}] },
+  { name:'High Card',       desc:'Highest single card wins',          cards:[{r:'A',s:'♠',hi:true},{r:'J',s:'♥',hi:false},{r:'9',s:'♦',hi:false},{r:'6',s:'♣',hi:false},{r:'2',s:'♠',hi:false}] }
 ];
 
 function buildRankings() {
