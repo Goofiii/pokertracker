@@ -56,6 +56,9 @@ const ICONS = {
 
   // ⚠  Warning — imbalance alert
   warning: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;vertical-align:middle"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+
+  // 🕐  Clock — session duration
+  clock: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;vertical-align:middle"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>`,
 };
 
 // Helper: icon sized & styled inline
@@ -99,7 +102,16 @@ function fmtSigned(amount) {
   return sign + (amount < 0 ? '-' : '') + '$' + str;
 }
 
-function colorClass(amount) {
+function fmtDuration(minutes) {
+  if (!minutes) return '—';
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (h === 0) return `${m}m`;
+  if (m === 0) return `${h}h`;
+  return `${h}h ${m}m`;
+}
+
+
   if (amount > 0) return 'amount-green';
   if (amount < 0) return 'amount-red';
   return 'amount-neutral';
@@ -128,7 +140,16 @@ function playerStats(playerId) {
   const best = profits.length ? Math.max(...profits) : 0;
   const worst = profits.length ? Math.min(...profits) : 0;
   const totalHands = sessions.reduce((a, s) => a + (s.hands || 0), 0);
-  return { sessions: sessions.length, total, avg, best, worst, winRate: profits.length ? wins / profits.length : 0, totalHands, profits, sessionIds: sessions.map(s => s.id) };
+  const totalMinutes = sessions.reduce((a, s) => a + (s.durationMinutes || 0), 0);
+  const totalHours = totalMinutes / 60;
+  const profitPerHour = totalHours > 0 ? total / totalHours : null;
+  const profitPerHand = totalHands > 0 ? total / totalHands : null;
+  return {
+    sessions: sessions.length, total, avg, best, worst,
+    winRate: profits.length ? wins / profits.length : 0,
+    totalHands, profits, sessionIds: sessions.map(s => s.id),
+    totalMinutes, totalHours, profitPerHour, profitPerHand,
+  };
 }
 
 function showToast(msg, type = '') {
@@ -294,6 +315,7 @@ function sessionCard(s) {
       </div>
       <div class="session-meta">
         ${s.hands ? `<div class="session-meta-item">${icon('cards',{size:13})} ${s.hands} hands</div>` : ''}
+        ${s.durationMinutes ? `<div class="session-meta-item">${icon('clock',{size:13})} ${fmtDuration(s.durationMinutes)}</div>` : ''}
         ${topPlayer ? `<div class="session-meta-item">${icon('trophy',{size:13})} ${topPlayer.name} <span class="amount-green" style="margin-left:4px">${fmtSigned(topProfit)}</span></div>` : ''}
       </div>
     </div>
@@ -397,6 +419,26 @@ function renderPlayerDetail(main, data, headerActions) {
         </div>
       </div>
 
+      ${s.totalMinutes > 0 || s.totalHands > 0 ? `
+      <div class="section-header" style="margin-top:4px;">
+        <div class="section-title small">Rate Stats</div>
+      </div>
+      <div class="stat-grid ${s.totalMinutes > 0 && s.totalHands > 0 ? '' : 'wide'}">
+        ${s.profitPerHour !== null ? `
+        <div class="stat-card gold-border">
+          <div class="stat-label">Per Hour</div>
+          <div class="stat-value small ${colorClass(s.profitPerHour)}">${fmtSigned(Math.round(s.profitPerHour))}</div>
+          <div class="stat-sub">${fmtDuration(s.totalMinutes)} played</div>
+        </div>` : ''}
+        ${s.profitPerHand !== null ? `
+        <div class="stat-card">
+          <div class="stat-label">Per Hand</div>
+          <div class="stat-value small ${colorClass(s.profitPerHand)}">${s.profitPerHand >= 0 ? '+' : ''}$${Math.abs(s.profitPerHand).toFixed(2)}</div>
+          <div class="stat-sub">${s.totalHands} hands total</div>
+        </div>` : ''}
+      </div>
+      ` : ''}
+
       ${recentProfits.length >= 2 ? `
       <div class="chart-wrap">
         <div class="chart-title">Profit Trend (last ${recentProfits.length} sessions)</div>
@@ -475,6 +517,8 @@ function renderNewSession(main, data, headerActions) {
     const existing = db.sessions.find(s => s.id === data.editId);
     if (existing && !data.loaded) {
       sessionDraft = { ...existing, id: existing.id };
+      sessionDraft.durationHours = Math.floor((existing.durationMinutes || 0) / 60);
+      sessionDraft.durationMinutes = (existing.durationMinutes || 0) % 60;
       sessionDraft.players = existing.results.map(r => ({
         playerId: r.playerId,
         buyin: r.buyin.toString(),
@@ -514,6 +558,19 @@ function renderSessionStep1(main, headerActions) {
         <input class="form-input" id="s-hands" type="number" inputmode="numeric" placeholder="e.g. 120" value="${sessionDraft.hands || ''}" />
       </div>
       <div class="form-group">
+        <label class="form-label">Duration <span style="color:var(--text-muted)">(optional)</span></label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div>
+            <div style="font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:5px">Hours</div>
+            <input class="form-input" id="s-hours" type="number" inputmode="numeric" placeholder="0" min="0" max="24" value="${sessionDraft.durationHours || ''}" />
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:5px">Minutes</div>
+            <input class="form-input" id="s-minutes" type="number" inputmode="numeric" placeholder="0" min="0" max="59" value="${sessionDraft.durationMinutes || ''}" />
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
         <label class="form-label">Notes <span style="color:var(--text-muted)">(optional)</span></label>
         <textarea class="form-input" id="s-notes" placeholder="Any notes about the session...">${sessionDraft.notes || ''}</textarea>
       </div>
@@ -532,6 +589,8 @@ function sessionStep1Next() {
   if (!name) { showToast('Please enter a session name', 'error'); return; }
   sessionDraft.name = name;
   sessionDraft.hands = parseInt(document.getElementById('s-hands').value) || 0;
+  sessionDraft.durationHours = parseInt(document.getElementById('s-hours').value) || 0;
+  sessionDraft.durationMinutes = parseInt(document.getElementById('s-minutes').value) || 0;
   sessionDraft.notes = document.getElementById('s-notes').value.trim();
   sessionStep = 2;
   renderSessionStep2(document.getElementById('main-content'), document.getElementById('header-actions'));
@@ -722,7 +781,7 @@ function saveSession() {
     // Edit existing
     const idx = db.sessions.findIndex(s => s.id === sessionDraft.id);
     if (idx !== -1) {
-      db.sessions[idx] = { ...db.sessions[idx], name: sessionDraft.name, hands: sessionDraft.hands, notes: sessionDraft.notes, results };
+      db.sessions[idx] = { ...db.sessions[idx], name: sessionDraft.name, hands: sessionDraft.hands, durationMinutes: (sessionDraft.durationHours || 0) * 60 + (sessionDraft.durationMinutes || 0), notes: sessionDraft.notes, results };
       saveDB();
       sessionDraft = null;
       showToast('Session updated', 'success');
@@ -736,6 +795,7 @@ function saveSession() {
     id: uid(),
     name: sessionDraft.name,
     hands: sessionDraft.hands,
+    durationMinutes: (sessionDraft.durationHours || 0) * 60 + (sessionDraft.durationMinutes || 0),
     notes: sessionDraft.notes,
     date: new Date().toISOString(),
     results,
@@ -790,7 +850,7 @@ function renderSessionDetail(main, data, headerActions) {
       <div class="page-title">${session.name}</div>
       <div class="page-sub">${session.date ? new Date(session.date).toLocaleDateString('en-US', {weekday:'long',month:'long',day:'numeric',year:'numeric'}) : ''}</div>
 
-      <div class="stat-grid three">
+      <div class="stat-grid ${session.durationMinutes ? '' : 'three'}">
         <div class="stat-card">
           <div class="stat-label">Players</div>
           <div class="stat-value">${results.length}</div>
@@ -799,8 +859,13 @@ function renderSessionDetail(main, data, headerActions) {
           <div class="stat-label">Hands</div>
           <div class="stat-value">${session.hands || '—'}</div>
         </div>
+        ${session.durationMinutes ? `
         <div class="stat-card">
-          <div class="stat-label">Pot</div>
+          <div class="stat-label">Duration</div>
+          <div class="stat-value small">${fmtDuration(session.durationMinutes)}</div>
+        </div>` : ''}
+        <div class="stat-card">
+          <div class="stat-label">Total Pot</div>
           <div class="stat-value small">${fmt(results.reduce((a, r) => a + r.buyin, 0))}</div>
         </div>
       </div>
@@ -823,6 +888,7 @@ function renderSessionDetail(main, data, headerActions) {
               <th style="text-align:right">Buy-in</th>
               <th style="text-align:right">Cash-out</th>
               <th style="text-align:right">P&L</th>
+              ${session.durationMinutes ? `<th style="text-align:right">/hr</th>` : ''}
             </tr>
           </thead>
           <tbody>
@@ -830,6 +896,8 @@ function renderSessionDetail(main, data, headerActions) {
               const player = getPlayer(r.playerId);
               const profit = r.cashout - r.buyin;
               const isTop = i === 0 && profit > 0;
+              const hours = (session.durationMinutes || 0) / 60;
+              const perHour = hours > 0 ? profit / hours : null;
               return `
                 <tr class="${isTop ? 'top-winner' : ''}">
                   <td>
@@ -842,6 +910,7 @@ function renderSessionDetail(main, data, headerActions) {
                   <td style="text-align:right;color:var(--text-secondary)">${fmt(r.buyin)}</td>
                   <td style="text-align:right;color:var(--text-secondary)">${fmt(r.cashout)}</td>
                   <td style="text-align:right" class="${colorClass(profit)}">${fmtSigned(profit)}</td>
+                  ${session.durationMinutes ? `<td style="text-align:right;font-size:12px;" class="${colorClass(profit)}">${fmtSigned(Math.round(perHour))}</td>` : ''}
                 </tr>
               `;
             }).join('')}
