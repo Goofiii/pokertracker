@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Poker Night" />
+  <meta name="theme-color" content="#0a0a0a" />
+  <title>Poker Night</title>
+
+  <style>
+    :root {
+      --bg-primary: #0a0a0a;
+      --bg-secondary: #111111;
+      --bg-card: #161616;
+      --bg-elevated: #1e1e1e;
+      --gold: #c9a84c;
+      --gold-light: #e8c76a;
+      --gold-dim: rgba(201,168,76,0.15);
+      --gold-border: rgba(201,168,76,0.3);
+      --text-primary: #f0ece3;
+      --text-secondary: #8a8580;
+      --text-muted: #4a4642;
+      --green: #4caf6e;
+      --red: #e05252;
+      --border: rgba(255,255,255,0.07);
+      --border-subtle: rgba(255,255,255,0.04);
+      --nav-height: 56px;
+      --header-height: 60px;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-full: 999px;
+      --shadow-elevated: 0 8px 32px rgba(0,0,0,0.6);
+      --transition: 0.2s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; }
+
+    html, body { width:100%; height:100%; overflow:hidden; background:var(--bg-primary); color:var(--text-primary); font-family:-apple-system,'SF Pro Display',sans-serif; font-size:16px; -webkit-font-smoothing:antialiased; }
+
+    #app { width:100%; height:100%; display:flex; flex-direction:column; overflow:hidden; }
+
+    /* HEADER */
+    #app-header { flex-shrink:0; z-index:100; background:rgba(10,10,10,0.92); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border-bottom:1px solid var(--border); padding-top:env(safe-area-inset-top,44px); }
+    .header-inner { height:var(--header-height); padding:0 20px; display:flex; align-items:center; justify-content:space-between; }
+    .header-logo { display:flex; align-items:center; gap:8px; }
+    .logo-suit { font-size:22px; color:var(--gold); line-height:1; }
+    .logo-text { font-size:20px; font-weight:700; color:var(--text-primary); letter-spacing:0.02em; }
+
+    .live-pill { display:flex; align-items:center; gap:6px; background:rgba(76,175,110,0.12); border:1px solid rgba(76,175,110,0.3); border-radius:var(--radius-full); padding:5px 12px; font-size:12px; font-weight:600; color:var(--green); letter-spacing:0.04em; opacity:0; transition:opacity var(--transition); }
+    .live-pill.visible { opacity:1; }
+    .live-dot { width:6px; height:6px; background:var(--green); border-radius:50%; animation:pulse 1.4s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    /* MAIN */
+    #main-content { flex:1; overflow:hidden; position:relative; }
+
+    .page { position:absolute; inset:0; display:flex; flex-direction:column; transition:opacity 0.22s ease, transform 0.22s ease; }
+    .page.hidden { opacity:0; pointer-events:none; transform:translateX(16px); }
+
+    /* COUNTER PAGE */
+    #page-counter { background:var(--bg-primary); }
+
+    .stats-bar { display:flex; gap:10px; padding:16px 16px 0; }
+    .stats-bar .stat-card { flex:1; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-md); padding:14px; display:flex; flex-direction:column; gap:4px; }
+    .stat-card.gold-border { border-color:var(--gold-border); background:linear-gradient(135deg,var(--bg-card),rgba(201,168,76,0.05)); }
+    .stat-label { font-size:10px; font-weight:600; letter-spacing:0.09em; text-transform:uppercase; color:var(--text-secondary); }
+    .stat-value { font-size:28px; font-weight:700; color:var(--text-primary); letter-spacing:-0.02em; line-height:1.1; }
+    .stat-value.gold { color:var(--gold); }
+    .stat-sub { font-size:11px; color:var(--text-muted); margin-top:1px; }
+
+    /* TAP ZONE */
+    #tap-zone { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; position:relative; overflow:hidden; }
+    .tap-ripple { position:absolute; border-radius:50%; background:rgba(201,168,76,0.18); pointer-events:none; transform:scale(0); animation:rippleOut 0.5s cubic-bezier(0.4,0,0.2,1) forwards; }
+    @keyframes rippleOut { to { transform:scale(4); opacity:0; } }
+    .hand-number { font-size:110px; font-weight:800; color:var(--text-primary); letter-spacing:-0.05em; line-height:1; transition:transform 0.08s ease; }
+    .hand-number.bump { transform:scale(1.06); }
+    .hand-label { font-size:13px; font-weight:600; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-muted); margin-top:8px; }
+    .tap-hint { margin-top:24px; display:flex; align-items:center; gap:8px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-full); padding:8px 18px; font-size:13px; font-weight:500; color:var(--text-muted); }
+    .tap-hint svg { width:14px; height:14px; flex-shrink:0; }
+    #tap-flash { position:absolute; inset:0; background:radial-gradient(ellipse at center,rgba(201,168,76,0.12) 0%,transparent 70%); pointer-events:none; opacity:0; transition:opacity 0.08s; }
+    #tap-flash.flash { opacity:1; }
+
+    /* TIMER CONTROLS */
+    .timer-controls { padding:12px 16px 14px; display:flex; gap:10px; }
+    .ctrl-btn { flex:1; display:flex; align-items:center; justify-content:center; gap:8px; border:none; border-radius:var(--radius-md); padding:14px; font-size:14px; font-weight:600; font-family:inherit; cursor:pointer; transition:var(--transition); letter-spacing:0.02em; }
+    .ctrl-btn svg { width:16px; height:16px; }
+    .ctrl-btn:active { transform:scale(0.96); opacity:0.85; }
+    .ctrl-start { background:linear-gradient(135deg,var(--gold),#a0772e); color:#000; box-shadow:0 4px 16px rgba(201,168,76,0.35); }
+    .ctrl-pause { background:var(--bg-card); border:1px solid var(--gold-border); color:var(--gold); }
+    .ctrl-reset { background:var(--bg-card); border:1px solid var(--border); color:var(--text-secondary); flex:0 0 52px; padding:14px 0; }
+
+    /* BOTTOM NAV — exact match to poker-tracker */
+    #bottom-nav { flex-shrink:0; display:flex; align-items:center; background:rgba(10,10,10,0.95); border-top:1px solid var(--border); padding-bottom:26px; padding-top:8px; height:calc(var(--nav-height) + 34px); }
+    .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; background:none; border:none; color:var(--text-muted); cursor:pointer; transition:color var(--transition); padding:0; height:100%; }
+    .nav-item svg { width:22px; height:22px; }
+    .nav-item span { font-size:10px; font-weight:500; letter-spacing:0.03em; }
+    .nav-item.active { color:var(--gold); }
+    .nav-item:active { opacity:0.6; }
+    .nav-icon-wrap { position:relative; display:flex; align-items:center; justify-content:center; }
+    .nav-badge { position:absolute; top:-3px; right:-8px; background:var(--gold); color:#000; font-size:9px; font-weight:800; border-radius:999px; min-width:16px; height:16px; display:flex; align-items:center; justify-content:center; padding:0 4px; line-height:1; }
+
+    /* HISTORY PAGE */
+    #page-history { overflow-y:auto; -webkit-overflow-scrolling:touch; background:var(--bg-primary); }
+    .history-inner { padding:18px 16px; padding-bottom:env(safe-area-inset-bottom,20px); }
+    .history-header { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:4px; }
+    .history-title { font-size:22px; font-weight:700; color:var(--text-primary); }
+    .history-clear-btn { background:none; border:none; font-size:13px; font-weight:500; color:var(--text-muted); cursor:pointer; padding:4px 0; font-family:inherit; }
+    .history-clear-btn:active { opacity:0.6; }
+    .history-sub { font-size:13px; color:var(--text-secondary); margin-bottom:18px; }
+
+    /* Summary row */
+    .history-summary { display:flex; gap:10px; margin-bottom:20px; }
+    .sum-card { flex:1; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-md); padding:12px 14px; }
+    .sum-label { font-size:10px; font-weight:600; letter-spacing:0.09em; text-transform:uppercase; color:var(--text-secondary); margin-bottom:4px; }
+    .sum-value { font-size:22px; font-weight:700; color:var(--text-primary); letter-spacing:-0.02em; }
+    .sum-value.gold { color:var(--gold); }
+
+    /* Session card */
+    .swipe-wrap { position:relative; border-radius:var(--radius-lg); margin-bottom:10px; overflow:hidden; border:1px solid var(--border); }
+    .swipe-delete-bg { position:absolute; right:0; top:0; bottom:0; width:80px; background:var(--red); display:flex; align-items:center; justify-content:center; }
+    .swipe-delete-bg svg { width:20px; height:20px; color:#fff; }
+    .swipe-inner { position:relative; transition:transform var(--transition); will-change:transform; }
+
+    .session-card { background:var(--bg-card); border-radius:var(--radius-lg); overflow:hidden; }
+
+    .session-card-header { display:flex; align-items:center; justify-content:space-between; padding:13px 16px 10px; border-bottom:1px solid var(--border-subtle); }
+    .session-date { font-size:13px; font-weight:600; color:var(--text-primary); }
+    .session-num-badge { font-size:10px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-muted); background:var(--bg-elevated); border:1px solid var(--border); border-radius:var(--radius-full); padding:3px 9px; }
+
+    .session-time-row { display:flex; align-items:center; gap:6px; padding:9px 16px; border-bottom:1px solid var(--border-subtle); flex-wrap:wrap; }
+    .session-time-chip { display:flex; align-items:center; gap:5px; font-size:13px; font-weight:500; color:var(--text-secondary); }
+    .session-time-chip svg { width:13px; height:13px; flex-shrink:0; color:var(--gold); }
+    .session-time-chip strong { color:var(--text-primary); font-weight:700; }
+    .session-arrow { font-size:12px; color:var(--text-muted); margin:0 2px; }
+
+    .pause-pip { display:inline-flex; align-items:center; gap:4px; background:var(--bg-elevated); border:1px solid var(--border); border-radius:var(--radius-full); padding:3px 9px; font-size:11px; font-weight:500; color:var(--text-secondary); margin-left:auto; }
+
+    .session-stats-grid { display:grid; grid-template-columns:1fr 1fr 1fr; }
+    .sess-stat { padding:11px 14px; display:flex; flex-direction:column; gap:3px; border-right:1px solid var(--border-subtle); }
+    .sess-stat:last-child { border-right:none; }
+    .sess-stat-label { font-size:9px; font-weight:700; letter-spacing:0.09em; text-transform:uppercase; color:var(--text-muted); }
+    .sess-stat-value { font-size:18px; font-weight:700; color:var(--text-primary); letter-spacing:-0.02em; }
+    .sess-stat-value.gold { color:var(--gold); }
+
+    /* Empty state */
+    .empty-state { text-align:center; padding:60px 24px 40px; }
+    .empty-icon { font-size:44px; margin-bottom:16px; opacity:0.3; }
+    .empty-title { font-size:17px; font-weight:600; color:var(--text-primary); margin-bottom:6px; }
+    .empty-sub { font-size:13px; color:var(--text-secondary); line-height:1.6; }
+
+    /* RANKINGS PAGE */
+    #page-rankings { overflow-y:auto; -webkit-overflow-scrolling:touch; background:var(--bg-primary); }
+    .rankings-inner { padding:18px 16px; padding-bottom:env(safe-area-inset-bottom,20px); }
+    .rankings-title { font-size:22px; font-weight:700; color:var(--text-primary); margin-bottom:4px; }
+    .rankings-sub { font-size:13px; color:var(--text-secondary); margin-bottom:18px; }
+    .hand-row { display:flex; align-items:center; gap:12px; padding:12px 14px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-md); margin-bottom:8px; }
+    .hand-rank-badge { width:26px; height:26px; border-radius:50%; background:var(--bg-elevated); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:var(--text-muted); flex-shrink:0; }
+    .hand-row.rank-1 { border-color:var(--gold-border); background:linear-gradient(135deg,var(--bg-card),rgba(201,168,76,0.06)); }
+    .hand-row.rank-1 .hand-rank-badge { background:var(--gold-dim); border-color:var(--gold-border); color:var(--gold); }
+    .hand-row.rank-2 .hand-rank-badge { background:rgba(201,168,76,0.08); border-color:rgba(201,168,76,0.2); color:var(--gold-light); }
+    .hand-info { flex:1; min-width:0; }
+    .hand-name { font-size:14px; font-weight:600; color:var(--text-primary); }
+    .hand-desc { font-size:11px; color:var(--text-muted); margin-top:2px; }
+    .hand-cards { display:flex; gap:3px; flex-shrink:0; }
+    .mini-card { width:22px; height:30px; background:var(--bg-elevated); border:1px solid rgba(255,255,255,0.10); border-radius:4px; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:9px; font-weight:700; line-height:1.1; }
+    .mini-card.gold-card { background:var(--gold-dim); border-color:var(--gold-border); color:var(--gold); }
+    .mini-card.dim-card { color:var(--text-secondary); }
+
+    /* MODALS */
+    .modal-overlay { position:fixed; inset:0; z-index:200; background:rgba(0,0,0,0.72); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); display:flex; align-items:flex-end; opacity:0; pointer-events:none; transition:opacity 0.2s; }
+    .modal-overlay.open { opacity:1; pointer-events:all; }
+    .modal-sheet { width:100%; background:var(--bg-secondary); border-top:1px solid var(--border); border-radius:20px 20px 0 0; padding-bottom:env(safe-area-inset-bottom,20px); animation:slideUp 0.28s cubic-bezier(0.4,0,0.2,1); }
+    @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+    .modal-handle { width:36px; height:4px; background:var(--bg-elevated); border-radius:2px; margin:12px auto 0; }
+    .modal-header { padding:16px 20px; border-bottom:1px solid var(--border); }
+    .modal-title { font-size:18px; font-weight:700; color:var(--text-primary); }
+    .modal-sub { font-size:13px; color:var(--text-secondary); margin-top:4px; }
+    .modal-actions { display:flex; flex-direction:column; gap:10px; padding:20px; }
+    .modal-btn { width:100%; padding:16px; border-radius:var(--radius-md); font-size:15px; font-weight:600; font-family:inherit; cursor:pointer; border:none; transition:var(--transition); }
+    .modal-btn:active { transform:scale(0.98); }
+    .modal-btn-danger { background:rgba(224,82,82,0.15); border:1px solid rgba(224,82,82,0.3); color:var(--red); }
+    .modal-btn-cancel { background:var(--bg-elevated); border:1px solid var(--border); color:var(--text-secondary); }
+
+    /* TOAST */
+    #toast { position:fixed; bottom:calc(var(--nav-height) + 34px + 12px); left:50%; transform:translateX(-50%) translateY(10px); background:var(--bg-elevated); border:1px solid var(--border); color:var(--text-primary); padding:11px 20px; border-radius:var(--radius-full); font-size:13px; font-weight:500; z-index:300; white-space:nowrap; box-shadow:var(--shadow-elevated); opacity:0; transition:opacity 0.2s,transform 0.2s; pointer-events:none; }
+    #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <header id="app-header">
+    <div class="header-inner">
+      <div class="header-logo">
+        <span class="logo-suit">♠</span>
+        <span class="logo-text">Poker Night</span>
+      </div>
+      <div id="live-pill" class="live-pill">
+        <div class="live-dot"></div>
+        LIVE
+      </div>
+    </div>
+  </header>
+
+  <main id="main-content">
+
+    <!-- COUNTER -->
+    <div id="page-counter" class="page">
+      <div class="stats-bar">
+        <div class="stat-card gold-border">
+          <span class="stat-label">Session Time</span>
+          <span class="stat-value gold" id="timer-display">00:00</span>
+          <span class="stat-sub" id="timer-sub">Not started</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Hands / Hour</span>
+          <span class="stat-value" id="hph-display">—</span>
+          <span class="stat-sub">pace</span>
+        </div>
+      </div>
+
+      <div id="tap-zone">
+        <div id="tap-flash"></div>
+        <div class="hand-number" id="hand-number">0</div>
+        <div class="hand-label">Hands Played</div>
+        <div class="tap-hint">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"/>
+            <path d="M18 11a2 2 0 0 1 2 2v1a8 8 0 0 1-8 8H8a6 6 0 0 1-6-6v-1a2 2 0 0 1 2-2h1"/>
+          </svg>
+          Tap anywhere to count a hand
+        </div>
+      </div>
+
+      <div class="timer-controls">
+        <button class="ctrl-btn ctrl-start" id="btn-start" onclick="timerStart()">
+          <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+          Start Timer
+        </button>
+        <button class="ctrl-btn ctrl-reset" id="btn-reset" onclick="confirmReset()" title="End session">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+            <path d="M3 3v5h5"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div id="page-history" class="page hidden">
+      <div class="history-inner">
+        <div class="history-header">
+          <div class="history-title">History</div>
+          <button class="history-clear-btn" onclick="confirmClearAll()">Clear all</button>
+        </div>
+        <div class="history-sub" id="history-sub">Your past sessions</div>
+        <div id="history-summary" class="history-summary" style="display:none"></div>
+        <div id="history-list"></div>
+      </div>
+    </div>
+
+    <!-- RANKINGS -->
+    <div id="page-rankings" class="page hidden">
+      <div class="rankings-inner">
+        <div class="rankings-title">Hand Rankings</div>
+        <div class="rankings-sub">Highest to lowest — poker hand strength</div>
+        <div id="rankings-list"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <nav id="bottom-nav">
+    <button class="nav-item active" id="nav-counter" onclick="showPage('counter')">
+      <div class="nav-icon-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+      </div>
+      <span>Counter</span>
+    </button>
+    <button class="nav-item" id="nav-history" onclick="showPage('history')">
+      <div class="nav-icon-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        <span id="history-badge" class="nav-badge" style="display:none"></span>
+      </div>
+      <span>History</span>
+    </button>
+    <button class="nav-item" id="nav-rankings" onclick="showPage('rankings')">
+      <div class="nav-icon-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+      </div>
+      <span>Rankings</span>
+    </button>
+  </nav>
+
+</div>
+
+<!-- MODALS -->
+<div id="modal-reset" class="modal-overlay" onclick="closeModal('reset',event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">End Session</div>
+      <div class="modal-sub">Saves the session to history and resets the counter.</div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-danger" onclick="doReset()">Save &amp; Reset</button>
+      <button class="modal-btn modal-btn-cancel" onclick="closeModal('reset')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="modal-clearall" class="modal-overlay" onclick="closeModal('clearall',event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">Clear History</div>
+      <div class="modal-sub">All past sessions will be permanently deleted.</div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-danger" onclick="doClearAll()">Delete All Sessions</button>
+      <button class="modal-btn modal-btn-cancel" onclick="closeModal('clearall')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="modal-deleteone" class="modal-overlay" onclick="closeModal('deleteone',event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">Delete Session</div>
+      <div class="modal-sub">This session will be permanently removed from history.</div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-danger" onclick="doDeleteOne()">Delete Session</button>
+      <button class="modal-btn modal-btn-cancel" onclick="closeModal('deleteone')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ============================
+   TIMEZONE — Chile (America/Santiago)
+   ============================ */
+const CL_TZ = 'America/Santiago';
+
+function fmtTime(ts) {
+  return new Date(ts).toLocaleTimeString('es-CL', {
+    timeZone: CL_TZ, hour:'2-digit', minute:'2-digit', hour12:false
+  });
+}
+
+function fmtDate(ts) {
+  const d = new Date(ts);
+  const weekday = d.toLocaleDateString('es-CL', { timeZone:CL_TZ, weekday:'short' });
+  const day     = d.toLocaleDateString('es-CL', { timeZone:CL_TZ, day:'numeric' });
+  const month   = d.toLocaleDateString('es-CL', { timeZone:CL_TZ, month:'short' });
+  const year    = d.toLocaleDateString('es-CL', { timeZone:CL_TZ, year:'numeric' });
+  return `${cap(weekday)} ${day} ${cap(month)} ${year}`;
+}
+
+function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1).replace('.',''); }
+
+function fmtDuration(ms) {
+  const totalSec = Math.floor(ms / 1000);
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  if (h > 0) return `${h}h ${String(m).padStart(2,'0')}m`;
+  if (m > 0) return `${m}m ${String(s).padStart(2,'0')}s`;
+  return `${s}s`;
+}
+
+/* ============================
+   STATE
+   ============================ */
+let hands        = parseInt(localStorage.getItem('pn_hands') || '0');
+let elapsed      = parseInt(localStorage.getItem('pn_elapsed') || '0');
+let startedAt    = null;
+let sessionStart = null;
+let pauseCount   = parseInt(localStorage.getItem('pn_pauseCount') || '0');
+let timerRunning = false;
+let tickInterval = null;
+let wakeLock     = null;
+let deleteTarget = null;
+
+const savedStartedAt    = localStorage.getItem('pn_startedAt');
+const savedSessionStart = localStorage.getItem('pn_sessionStart');
+if (savedStartedAt) {
+  startedAt    = parseInt(savedStartedAt);
+  sessionStart = savedSessionStart ? parseInt(savedSessionStart) : startedAt;
+  timerRunning = true;
+}
+
+let history = JSON.parse(localStorage.getItem('pn_history') || '[]');
+
+/* ============================
+   INIT
+   ============================ */
+function init() {
+  renderHands();
+  renderTimer();
+  buildRankings();
+  renderHistory();
+  if (timerRunning) { startTimerUI(); acquireWakeLock(); }
+  document.getElementById('tap-zone').addEventListener('touchstart', onTap, { passive:false });
+}
+
+/* ============================
+   HAND COUNTER
+   ============================ */
+function onTap(e) {
+  if (e.target.closest('.ctrl-btn') || e.target.closest('.tap-hint')) return;
+  e.preventDefault(); // kill the 300ms ghost click that would fire after touchstart
+  hands++;
+  localStorage.setItem('pn_hands', hands);
+  renderHands();
+  feedbackTap(e);
+}
+
+function renderHands() {
+  document.getElementById('hand-number').textContent = hands;
+  renderHPH();
+}
+
+function renderHPH() {
+  const el = document.getElementById('hph-display');
+  const ms = timerRunning ? elapsed + (Date.now() - startedAt) : elapsed;
+  const hours = ms / 3600000;
+  if (hours < 0.02 || hands === 0) { el.textContent = '—'; return; }
+  el.textContent = Math.round(hands / hours);
+}
+
+function feedbackTap(e) {
+  if (navigator.vibrate) navigator.vibrate(8);
+  const num = document.getElementById('hand-number');
+  num.classList.remove('bump'); void num.offsetWidth; num.classList.add('bump');
+  setTimeout(() => num.classList.remove('bump'), 120);
+  const flash = document.getElementById('tap-flash');
+  flash.classList.add('flash');
+  setTimeout(() => flash.classList.remove('flash'), 120);
+  const zone = document.getElementById('tap-zone');
+  const rect  = zone.getBoundingClientRect();
+  const cx = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+  const cy = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+  const size = Math.max(rect.width, rect.height) * 1.2;
+  const rip = document.createElement('div');
+  rip.className = 'tap-ripple';
+  rip.style.cssText = `width:${size}px;height:${size}px;left:${cx-size/2}px;top:${cy-size/2}px;`;
+  zone.appendChild(rip);
+  setTimeout(() => rip.remove(), 520);
+}
+
+/* ============================
+   TIMER
+   ============================ */
+function timerStart() {
+  if (timerRunning) { timerPause(); return; }
+  const now = Date.now();
+  startedAt = now;
+  if (!sessionStart) {
+    sessionStart = now;
+    localStorage.setItem('pn_sessionStart', sessionStart);
+  }
+  localStorage.setItem('pn_startedAt', startedAt);
+  timerRunning = true;
+  startTimerUI();
+  acquireWakeLock();
+}
+
+function timerPause() {
+  elapsed += Date.now() - startedAt;
+  startedAt = null;
+  timerRunning = false;
+  pauseCount++;
+  localStorage.setItem('pn_elapsed', elapsed);
+  localStorage.setItem('pn_pauseCount', pauseCount);
+  localStorage.removeItem('pn_startedAt');
+  stopTimerUI();
+  releaseWakeLock();
+}
+
+function startTimerUI() {
+  const btn = document.getElementById('btn-start');
+  btn.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>Pause`;
+  btn.classList.remove('ctrl-start'); btn.classList.add('ctrl-pause');
+  document.getElementById('timer-sub').textContent = 'Running';
+  document.getElementById('live-pill').classList.add('visible');
+  tickInterval = setInterval(() => { renderTimer(); renderHPH(); }, 1000);
+  renderTimer();
+}
+
+function stopTimerUI() {
+  clearInterval(tickInterval);
+  const btn = document.getElementById('btn-start');
+  btn.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>Resume`;
+  btn.classList.remove('ctrl-pause'); btn.classList.add('ctrl-start');
+  document.getElementById('timer-sub').textContent = 'Paused';
+  document.getElementById('live-pill').classList.remove('visible');
+  renderTimer();
+}
+
+function renderTimer() {
+  const ms = timerRunning ? elapsed + (Date.now() - startedAt) : elapsed;
+  const t  = Math.floor(ms / 1000);
+  const h  = Math.floor(t / 3600);
+  const m  = Math.floor((t % 3600) / 60);
+  const s  = t % 60;
+  document.getElementById('timer-display').textContent = h > 0
+    ? `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`
+    : `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+/* ============================
+   RESET → SAVE SESSION
+   ============================ */
+function confirmReset() {
+  if (hands === 0 && elapsed === 0 && !timerRunning) { showToast('Nothing to reset'); return; }
+  document.getElementById('modal-reset').classList.add('open');
+}
+
+function doReset() {
+  const finalElapsed = timerRunning ? elapsed + (Date.now() - startedAt) : elapsed;
+  const endTs        = Date.now();
+  const startTs      = sessionStart || startedAt || (endTs - finalElapsed);
+
+  if (finalElapsed > 0 || hands > 0) {
+    const hours = finalElapsed / 3600000;
+    const hph   = (hours >= 0.02 && hands > 0) ? Math.round(hands / hours) : null;
+    history.unshift({
+      id: Date.now(),
+      startTs,
+      endTs,
+      elapsed: finalElapsed,
+      hands,
+      pauseCount,
+      hph
+    });
+    localStorage.setItem('pn_history', JSON.stringify(history));
+  }
+
+  // Reset everything
+  if (timerRunning) { clearInterval(tickInterval); releaseWakeLock(); }
+  timerRunning = false;
+  hands = 0; elapsed = 0; startedAt = null; sessionStart = null; pauseCount = 0;
+  ['pn_hands','pn_elapsed','pn_startedAt','pn_sessionStart','pn_pauseCount'].forEach(k => localStorage.removeItem(k));
+
+  const btn = document.getElementById('btn-start');
+  btn.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>Start Timer`;
+  btn.classList.remove('ctrl-pause'); btn.classList.add('ctrl-start');
+  document.getElementById('timer-sub').textContent = 'Not started';
+  document.getElementById('live-pill').classList.remove('visible');
+
+  renderHands(); renderTimer(); renderHistory();
+  closeModal('reset');
+  showToast('Session saved to history');
+}
+
+/* ============================
+   HISTORY RENDER
+   ============================ */
+function renderHistory() {
+  const list    = document.getElementById('history-list');
+  const summary = document.getElementById('history-summary');
+  const sub     = document.getElementById('history-sub');
+  const badge   = document.getElementById('history-badge');
+
+  badge.textContent  = history.length;
+  badge.style.display = history.length > 0 ? 'flex' : 'none';
+
+  if (history.length === 0) {
+    summary.style.display = 'none';
+    sub.textContent = 'Your past sessions';
+    list.innerHTML  = `
+      <div class="empty-state">
+        <div class="empty-icon">🃏</div>
+        <div class="empty-title">No sessions yet</div>
+        <div class="empty-sub">Finish a session using the reset button and it will appear here.</div>
+      </div>`;
+    return;
+  }
+
+  const totalHands = history.reduce((a,s) => a + s.hands, 0);
+  const totalMs    = history.reduce((a,s) => a + s.elapsed, 0);
+  sub.textContent  = `${history.length} session${history.length !== 1 ? 's' : ''} recorded`;
+
+  summary.style.display = 'flex';
+  summary.innerHTML = `
+    <div class="sum-card">
+      <div class="sum-label">Sessions</div>
+      <div class="sum-value gold">${history.length}</div>
+    </div>
+    <div class="sum-card">
+      <div class="sum-label">Total Hands</div>
+      <div class="sum-value">${totalHands}</div>
+    </div>
+    <div class="sum-card">
+      <div class="sum-label">Total Time</div>
+      <div class="sum-value">${fmtDuration(totalMs)}</div>
+    </div>`;
+
+  list.innerHTML = history.map((s, idx) => {
+    const num = history.length - idx;
+    return `
+      <div class="swipe-wrap" id="sw-${s.id}" data-id="${s.id}">
+        <div class="swipe-delete-bg">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+            <path d="M10 11v6M14 11v6M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+          </svg>
+        </div>
+        <div class="swipe-inner" id="si-${s.id}">
+          <div class="session-card">
+            <div class="session-card-header">
+              <div class="session-date">${fmtDate(s.startTs)}</div>
+              <div class="session-num-badge">Session #${num}</div>
+            </div>
+            <div class="session-time-row">
+              <div class="session-time-chip">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                <strong>${fmtTime(s.startTs)}</strong>
+              </div>
+              <span class="session-arrow">→</span>
+              <div class="session-time-chip">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                <strong>${fmtTime(s.endTs)}</strong>
+              </div>
+              <span class="pause-pip">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                ${s.pauseCount} pausa${s.pauseCount !== 1 ? 's' : ''}
+              </span>
+            </div>
+            <div class="session-stats-grid">
+              <div class="sess-stat">
+                <div class="sess-stat-label">Manos</div>
+                <div class="sess-stat-value gold">${s.hands}</div>
+              </div>
+              <div class="sess-stat">
+                <div class="sess-stat-label">Duración</div>
+                <div class="sess-stat-value">${fmtDuration(s.elapsed)}</div>
+              </div>
+              <div class="sess-stat">
+                <div class="sess-stat-label">M / Hora</div>
+                <div class="sess-stat-value">${s.hph !== null ? s.hph : '—'}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+
+  history.forEach(s => attachSwipe(s.id));
+}
+
+/* ============================
+   SWIPE TO DELETE
+   ============================ */
+function attachSwipe(id) {
+  const inner = document.getElementById('si-' + id);
+  if (!inner) return;
+  let startX = 0, curX = 0, active = false;
+
+  inner.addEventListener('touchstart', e => {
+    startX = e.touches[0].clientX; curX = 0; active = true;
+    inner.style.transition = 'none';
+  }, { passive:true });
+
+  inner.addEventListener('touchmove', e => {
+    if (!active) return;
+    const dx = e.touches[0].clientX - startX;
+    if (dx > 0) { inner.style.transform = 'translateX(0)'; return; }
+    curX = dx;
+    inner.style.transform = `translateX(${Math.max(dx,-80)}px)`;
+  }, { passive:true });
+
+  inner.addEventListener('touchend', () => {
+    if (!active) return;
+    active = false;
+    inner.style.transition = 'transform var(--transition)';
+    if (curX < -55) {
+      inner.style.transform = 'translateX(-80px)';
+      setTimeout(() => {
+        deleteTarget = id;
+        document.getElementById('modal-deleteone').classList.add('open');
+      }, 120);
+    } else {
+      inner.style.transform = 'translateX(0)';
+    }
+  });
+}
+
+/* ============================
+   DELETE ONE / CLEAR ALL
+   ============================ */
+function doDeleteOne() {
+  history = history.filter(s => s.id !== deleteTarget);
+  localStorage.setItem('pn_history', JSON.stringify(history));
+  deleteTarget = null;
+  renderHistory();
+  closeModal('deleteone');
+  showToast('Session deleted');
+}
+
+function confirmClearAll() {
+  if (history.length === 0) { showToast('No sessions to clear'); return; }
+  document.getElementById('modal-clearall').classList.add('open');
+}
+
+function doClearAll() {
+  history = [];
+  localStorage.removeItem('pn_history');
+  renderHistory();
+  closeModal('clearall');
+  showToast('History cleared');
+}
+
+/* ============================
+   MODALS
+   ============================ */
+function closeModal(name, e) {
+  const overlay = document.getElementById('modal-' + name);
+  if (e && e.target !== overlay) return;
+  overlay.classList.remove('open');
+  if (name === 'deleteone') {
+    document.querySelectorAll('.swipe-inner').forEach(el => {
+      el.style.transition = 'transform var(--transition)';
+      el.style.transform  = 'translateX(0)';
+    });
+    deleteTarget = null;
+  }
+}
+
+/* ============================
+   WAKE LOCK
+   ============================ */
+async function acquireWakeLock() {
+  try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch(_) {}
+}
+function releaseWakeLock() {
+  try { if (wakeLock) { wakeLock.release(); wakeLock = null; } } catch(_) {}
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && timerRunning) acquireWakeLock();
+});
+
+/* ============================
+   NAVIGATION
+   ============================ */
+let currentPage = 'counter';
+function showPage(name) {
+  if (name === currentPage) return;
+  document.getElementById('page-' + currentPage).classList.add('hidden');
+  document.getElementById('nav-' + currentPage).classList.remove('active');
+  document.getElementById('page-' + name).classList.remove('hidden');
+  document.getElementById('nav-' + name).classList.add('active');
+  currentPage = name;
+}
+
+/* ============================
+   TOAST
+   ============================ */
+let toastTimer;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
+}
+
+/* ============================
+   HAND RANKINGS
+   ============================ */
+const HANDS = [
+  { name:'Royal Flush',     desc:'A K Q J 10 — mismo palo',       cards:[{r:'A',s:'♠',hi:true},{r:'K',s:'♠',hi:true},{r:'Q',s:'♠',hi:true},{r:'J',s:'♠',hi:true},{r:'10',s:'♠',hi:true}] },
+  { name:'Straight Flush',  desc:'Cinco consecutivas — mismo palo',cards:[{r:'9',s:'♥',hi:true},{r:'8',s:'♥',hi:true},{r:'7',s:'♥',hi:true},{r:'6',s:'♥',hi:true},{r:'5',s:'♥',hi:true}] },
+  { name:'Four of a Kind',  desc:'Cuatro del mismo valor',         cards:[{r:'K',s:'♠',hi:true},{r:'K',s:'♥',hi:true},{r:'K',s:'♦',hi:true},{r:'K',s:'♣',hi:true},{r:'2',s:'♦',hi:false}] },
+  { name:'Full House',      desc:'Trío + par',                     cards:[{r:'J',s:'♠',hi:true},{r:'J',s:'♥',hi:true},{r:'J',s:'♦',hi:true},{r:'7',s:'♣',hi:false},{r:'7',s:'♦',hi:false}] },
+  { name:'Flush',           desc:'Cinco — mismo palo',             cards:[{r:'A',s:'♣',hi:true},{r:'10',s:'♣',hi:false},{r:'8',s:'♣',hi:false},{r:'5',s:'♣',hi:false},{r:'3',s:'♣',hi:false}] },
+  { name:'Straight',        desc:'Cinco consecutivas — any suit',  cards:[{r:'9',s:'♦',hi:true},{r:'8',s:'♣',hi:false},{r:'7',s:'♠',hi:false},{r:'6',s:'♥',hi:false},{r:'5',s:'♦',hi:false}] },
+  { name:'Three of a Kind', desc:'Tres del mismo valor',           cards:[{r:'Q',s:'♠',hi:true},{r:'Q',s:'♥',hi:true},{r:'Q',s:'♦',hi:true},{r:'9',s:'♣',hi:false},{r:'4',s:'♦',hi:false}] },
+  { name:'Two Pair',        desc:'Dos pares distintos',            cards:[{r:'A',s:'♠',hi:true},{r:'A',s:'♦',hi:true},{r:'8',s:'♥',hi:false},{r:'8',s:'♣',hi:false},{r:'K',s:'♠',hi:false}] },
+  { name:'One Pair',        desc:'Dos del mismo valor',            cards:[{r:'10',s:'♠',hi:true},{r:'10',s:'♥',hi:true},{r:'A',s:'♦',hi:false},{r:'7',s:'♣',hi:false},{r:'3',s:'♦',hi:false}] },
+  { name:'High Card',       desc:'La carta más alta gana',         cards:[{r:'A',s:'♠',hi:true},{r:'J',s:'♥',hi:false},{r:'9',s:'♦',hi:false},{r:'6',s:'♣',hi:false},{r:'2',s:'♠',hi:false}] }
+];
+
+function buildRankings() {
+  document.getElementById('rankings-list').innerHTML = HANDS.map((h,i) => `
+    <div class="hand-row ${i<2?'rank-'+(i+1):''}">
+      <div class="hand-rank-badge">${i+1}</div>
+      <div class="hand-info">
+        <div class="hand-name">${h.name}</div>
+        <div class="hand-desc">${h.desc}</div>
+      </div>
+      <div class="hand-cards">
+        ${h.cards.map(c=>`<div class="mini-card ${c.hi?'gold-card':'dim-card'}"><span class="rank">${c.r}</span><span class="suit">${c.s}</span></div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+init();
+</script>
+</body>
+</html>
